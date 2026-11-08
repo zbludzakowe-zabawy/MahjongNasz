@@ -6,6 +6,9 @@
   const HELPS_PER_LEVEL = 2;
   const INITIAL_STARS = 4;
   const HIDDEN_COUNT = { none: 0, few: 6, many: 14 };
+  // Tryb „zmienny”: z każdym poziomem przybywa zakrytych kafelków (2, 4, 6…)
+  const VARIABLE_HIDDEN_STEP = 2;
+  const VARIABLE_HIDDEN_MAX = 30;
 
   // Poziom trudności (1-5) działa niezależnie od pozostałych opcji:
   //  ratio    – ile par przypada na jeden rodzaj obrazka (więcej = łatwiej)
@@ -47,6 +50,7 @@
 
   const DEFAULTS = {
     v: 2, layout: null, tileset: 'music', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null,
+    mode: 'fixed',
     layoutUse: {}, tilesetUse: {},
   };
   const settings = loadSettings();
@@ -59,6 +63,7 @@
   let tileEls = [];
   let hintTimer = null;
   let geo = null; // wymiary kafelków z ostatniego layoutBoard()
+  let mixToken = 0; // trwająca animacja miksowania (0 – brak)
 
   // ---------- narzędzia ----------
   function shuffle(a) {
@@ -133,6 +138,9 @@
         solution: S.solution,
         starPath: S.starPath,
         level: S.level,
+        stars: S.stars,
+        hiddenN: S.hiddenN,
+        starsAge: S.starsAge,
         elapsed: S.over ? S.elapsed : Date.now() - S.start,
       }));
     } catch (e) { /* brak miejsca lub dostępu – gra działa dalej bez zapisu */ }
@@ -169,6 +177,9 @@
       newStars: [],
       starPath: Array.isArray(g.starPath) ? g.starPath : [],
       level: g.level || 1,
+      stars: typeof g.stars === 'boolean' ? g.stars : settings.stars,
+      hiddenN: typeof g.hiddenN === 'number' ? g.hiddenN : tiles.filter((t) => t.faceDown).length,
+      starsAge: g.starsAge || 0,
       start: Date.now() - (g.elapsed || 0),
       elapsed: 0,
       over: false,
@@ -239,12 +250,26 @@
   }
 
   // ---------- nowa gra ----------
-  function newGame(level) {
+  const variableHidden = (level) => Math.min(VARIABLE_HIDDEN_MAX, VARIABLE_HIDDEN_STEP * level);
+
+  // variant – gotowe parametry planszy (tryb zmienny, ponowna gra);
+  // bez niego plansza powstaje z ustawień z menu
+  function newGame(level, variant) {
     clearStarShow();
-    countUse('layoutUse', settings.layout);
-    countUse('tilesetUse', settings.tileset);
-    const layout = Layouts.get(settings.layout, settings.device);
-    const tileset = TileSets.get(settings.tileset);
+    stopMix();
+    const v = variant || {
+      layout: settings.layout,
+      tileset: settings.tileset,
+      stars: settings.stars,
+      hidden: settings.mode === 'variable' ? variableHidden(level) : (HIDDEN_COUNT[settings.hidden] || 0),
+      starsAge: 0,
+    };
+    if (!variant) {
+      countUse('layoutUse', settings.layout);
+      countUse('tilesetUse', settings.tileset);
+    }
+    const layout = Layouts.get(v.layout, settings.device);
+    const tileset = TileSets.get(v.tileset);
     const diff = DIFFICULTY[settings.difficulty] || DIFFICULTY[3];
 
     let pos = layout.build();
@@ -252,7 +277,9 @@
     const spanX = Math.max(...pos.map((p) => p.x)) - Math.min(...pos.map((p) => p.x)) + 2;
     const spanY = (Math.max(...pos.map((p) => p.y)) - Math.min(...pos.map((p) => p.y)) + 2) * 1.3;
     const portrait = boardWrap.clientHeight > boardWrap.clientWidth * 1.15;
-    if (portrait && spanX > spanY * 1.1) pos = pos.map((p) => ({ x: p.y, y: p.x, z: p.z }));
+    // na telefonie układ ma być najwyżej PHONE_MAX[0] kafelków szeroki
+    const tooWide = settings.device === 'phone' && spanX / 2 > Layouts.PHONE_MAX[0] && spanX > spanY / 1.3;
+    if (portrait && (spanX > spanY * 1.1 || tooWide)) pos = pos.map((p) => ({ x: p.y, y: p.x, z: p.z }));
     const minX = Math.min(...pos.map((p) => p.x));
     const minY = Math.min(...pos.map((p) => p.y));
     const tiles = pos.map((p, i) => ({
@@ -275,7 +302,7 @@
     }
 
     // kafelki rewersem do góry – tylko te, które są czymś przykryte
-    const hiddenN = HIDDEN_COUNT[settings.hidden] || 0;
+    const hiddenN = v.hidden || 0;
     if (hiddenN) {
       shuffle(tiles.filter((t) => t.above.length > 0))
         .slice(0, hiddenN)
@@ -283,7 +310,7 @@
     }
 
     // gwiazdki
-    if (settings.stars) {
+    if (v.stars) {
       shuffle(tiles.filter((t) => !t.faceDown)).slice(0, INITIAL_STARS).forEach((t) => (t.star = true));
     }
 
@@ -298,6 +325,9 @@
       newStars: [],
       starPath: [],
       level,
+      stars: !!v.stars,
+      hiddenN,
+      starsAge: v.starsAge || 0,
       start: Date.now(),
       elapsed: 0,
       over: false,
@@ -320,7 +350,7 @@
   }
 
   function clickTile(t) {
-    if (!S || S.over) return;
+    if (!S || S.over || mixToken) return;
     if (t.loc === 'board' && !isFree(t)) {
       nudge(t);
       return;
@@ -358,7 +388,7 @@
   }
 
   function clickSlot(i) {
-    if (!S || S.over || S.tray[i] !== null || S.selected === null) return;
+    if (!S || S.over || mixToken || S.tray[i] !== null || S.selected === null) return;
     const t = S.tiles[S.selected];
     if (t.loc === 'board') moveToTray(t, i);
   }
@@ -405,7 +435,7 @@
     const starsTaken = (a.star ? 1 : 0) + (b.star ? 1 : 0);
     // zapamiętaj, gdzie na stosie znaleziono gwiazdki – do animacji zwycięstwa
     for (const t of [a, b]) if (t.star) S.starPath.push(t.id);
-    if (settings.stars && starsTaken > 0) {
+    if (S.stars && starsTaken > 0) {
       const want = starsTaken * 2; // 1 gwiazdka -> 2 nowe, 2 gwiazdki -> 4 nowe
       const cand = S.tiles.filter((t) => t.loc === 'board' && !t.star);
       const visible = shuffle(cand.filter(isRevealed));
@@ -425,7 +455,7 @@
     if (left.length === 0) return win('clear');
     // gwiazdki liczą się tylko na stosie – kafelki w schowku są pomijane
     const onStack = left.filter((t) => t.loc === 'board');
-    if (settings.stars && onStack.length && onStack.every((t) => t.star)) return win('stars');
+    if (S.stars && onStack.length && onStack.every((t) => t.star)) return win('stars');
     if (isStuck()) setTimeout(showStuck, 450);
   }
 
@@ -450,7 +480,7 @@
 
   // ---------- pomoce ----------
   function useHint() {
-    if (!S || S.over) return;
+    if (!S || S.over || mixToken) return;
     if (S.helps.hint <= 0) return toast('Lupa już wykorzystana');
     const pair = findPair();
     if (!pair) {
@@ -475,7 +505,7 @@
   }
 
   function useUndo() {
-    if (!S) return;
+    if (!S || mixToken) return;
     if (S.helps.undo <= 0) return toast('Cofanie już wykorzystane');
     const h = S.history.pop();
     if (!h) return toast('Nie ma czego cofnąć');
@@ -496,12 +526,94 @@
   }
 
   function useShuffle() {
-    if (!S) return;
+    if (!S || mixToken) return;
     if (S.helps.shuffle <= 0) return toast('Miksowanie już wykorzystane');
     const board = S.tiles.filter((t) => t.loc === 'board');
     if (board.length < 2) return toast('Za mało kafelków do miksowania');
     S.helps.shuffle--;
+    S.selected = null;
+    S.hint = [];
+    S.newStars = [];
+    S.over = false;
+    hideModals();
+    render();
 
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !geo) {
+      mixFaces(board);
+      afterMove();
+      return;
+    }
+
+    // 1) kafelki zjeżdżają wirując do środka stosu, 2) tam się mieszają,
+    // 3) rozlatują się z powrotem na swoje miejsca – już z nowymi obrazkami
+    const token = ++mixToken;
+    const W = parseFloat(boardEl.style.width) || 0;
+    const H = parseFloat(boardEl.style.height) || 0;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const moves = board.map((t) => {
+      const c = tileCenter(t);
+      const ang = rnd(0, Math.PI * 2);
+      const r = rnd(0, Math.min(W, H) * 0.12);
+      const gx = W / 2 + Math.cos(ang) * r - c.x;
+      const gy = H / 2 + Math.sin(ang) * r - c.y;
+      const spin = rnd(180, 540) * (Math.random() < 0.5 ? -1 : 1);
+      // punkt pośredni – kafelek zatacza łuk zamiast lecieć po prostej
+      const side = rnd(0.25, 0.5) * (Math.random() < 0.5 ? -1 : 1);
+      const mid = `translate(${(gx * 0.5 - gy * side).toFixed(1)}px,${(gy * 0.5 + gx * side).toFixed(1)}px) rotate(${(spin * 0.45).toFixed(0)}deg) scale(.85)`;
+      const gathered = `translate(${gx.toFixed(1)}px,${gy.toFixed(1)}px) rotate(${spin.toFixed(0)}deg) scale(.55)`;
+      const wobble = `translate(${(gx + rnd(-1, 1) * geo.tw * 0.6).toFixed(1)}px,${(gy + rnd(-1, 1) * geo.tw * 0.6).toFixed(1)}px) rotate(${(spin + rnd(-120, 120)).toFixed(0)}deg) scale(.6)`;
+      return { el: tileEls[t.id], mid, gathered, wobble, delay: rnd(0, 140) };
+    });
+    boardEl.classList.add('mixing');
+
+    const IN = 520;
+    const SWIRL = 380;
+    const OUT = 620;
+    moves.forEach((m) => {
+      m.anim = m.el.animate(
+        [{ transform: 'none' }, { transform: m.mid, offset: 0.55 }, { transform: m.gathered }],
+        { duration: IN, delay: m.delay, easing: 'cubic-bezier(.5,0,.75,.4)', fill: 'forwards' }
+      );
+    });
+    setTimeout(() => {
+      if (token !== mixToken) return;
+      moves.forEach((m) => {
+        m.anim.cancel();
+        m.anim = m.el.animate(
+          [{ transform: m.gathered }, { transform: m.wobble }, { transform: m.gathered }],
+          { duration: SWIRL, easing: 'ease-in-out', fill: 'forwards' }
+        );
+      });
+      // obrazki zmieniają się, gdy kafelki są zbite w kupkę
+      setTimeout(() => {
+        if (token !== mixToken) return;
+        mixFaces(board);
+        moves.forEach((m) => {
+          m.anim.cancel();
+          m.anim = m.el.animate(
+            [{ transform: m.gathered }, { transform: m.mid, offset: 0.45 }, { transform: 'none' }],
+            { duration: OUT, delay: m.delay, easing: 'cubic-bezier(.25,.6,.35,1)' }
+          );
+        });
+        setTimeout(() => {
+          if (token !== mixToken) return;
+          stopMix();
+          afterMove();
+        }, OUT + 160);
+      }, SWIRL);
+    }, IN + 160);
+  }
+
+  function stopMix() {
+    if (!mixToken) return;
+    mixToken = 0;
+    boardEl.classList.remove('mixing');
+    tileEls.forEach((el) => el.getAnimations && el.getAnimations().forEach((a) => a.cancel()));
+  }
+
+  // nowy przydział obrazków dla kafelków na stosie – tak, by dało się grać dalej
+  function mixFaces(board) {
     const items = board.map((t) => ({ face: t.face, star: t.star }));
     const groups = new Map();
     items.forEach((it) => {
@@ -531,17 +643,46 @@
       const sh = shuffle(items);
       board.forEach((t, k) => assign(t, sh[k]));
     }
-
     S.history = []; // po miksowaniu nie cofamy wcześniejszych ruchów
-    S.selected = null;
-    S.hint = [];
-    S.newStars = [];
-    S.over = false;
-    hideModals();
-    boardEl.classList.remove('mixing');
-    void boardEl.offsetWidth;
-    boardEl.classList.add('mixing');
-    afterMove();
+    render();
+  }
+
+  // ---------- tryb zmienny ----------
+  function currentVariant() {
+    return { layout: S.layout.id, tileset: S.tileset.id, stars: S.stars, hidden: S.hiddenN, starsAge: S.starsAge };
+  }
+
+  // następna plansza: inny układ, inne obrazki, więcej zakrytych kafelków,
+  // a co jakiś czas zmiana gry z gwiazdkami na bez gwiazdek (i odwrotnie)
+  function nextVariant(level) {
+    const others = (list, id) => {
+      const rest = list.filter((x) => x.id !== id);
+      return pick(rest.length ? rest : list).id;
+    };
+    const age = (S.starsAge || 0) + 1;
+    const flip = age >= 2 && (age >= 4 || Math.random() < 0.35);
+    return {
+      layout: others(Layouts.forDevice(settings.device), S.layout.id),
+      tileset: others(TileSets.list, S.tileset.id),
+      stars: flip ? !S.stars : S.stars,
+      hidden: variableHidden(level),
+      starsAge: flip ? 0 : age,
+    };
+  }
+
+  function nextLevel() {
+    const level = S.level + 1;
+    if (settings.mode !== 'variable') return newGame(level);
+    const prevStars = S.stars;
+    newGame(level, nextVariant(level));
+    const hid = S.tiles.filter((t) => t.faceDown).length;
+    let msg = `Poziom ${level}: ${S.layout.name} · ${S.tileset.name}` + (hid ? ` · ${hid} zakrytych` : '');
+    if (S.stars !== prevStars) msg = (S.stars ? '⭐ Teraz gra z gwiazdkami! ' : 'Teraz gra bez gwiazdek. ') + msg;
+    toast(msg, 4000);
+  }
+
+  function replayLevel() {
+    newGame(S.level, settings.mode === 'variable' ? currentVariant() : null);
   }
 
   // ---------- koniec gry ----------
@@ -554,6 +695,7 @@
       return;
     }
     showWinModal(kind);
+    confetti();
   }
 
   function showWinModal(kind) {
@@ -564,9 +706,10 @@
       : 'Zebrano wszystkie kafelki.';
     showModal('#endModal', {
       title,
-      body: `<p>${msg}</p>${kind === 'stars' ? starLegend() : ''}<p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`,
+      body: `<p>${msg}</p>${kind === 'stars' ? starLegend() : ''}<p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`
+        + (settings.mode === 'variable' ? '<p>Tryb zmienny: następna plansza będzie zupełnie inna.</p>' : ''),
       buttons: [
-        { label: 'Następny poziom ▶', primary: true, action: () => newGame(S.level + 1) },
+        { label: 'Następny poziom ▶', primary: true, action: nextLevel },
         { label: 'Ustawienia', action: openMenu },
       ],
     });
@@ -583,7 +726,7 @@
     }
     const canHelp = buttons.length > 0;
     if (!canHelp) S.over = true;
-    buttons.push({ label: 'Zagraj ponownie', action: () => newGame(S.level) });
+    buttons.push({ label: 'Zagraj ponownie', action: replayLevel });
     buttons.push({ label: 'Ustawienia', action: openMenu });
     showModal('#endModal', {
       title: 'Brak ruchów',
@@ -667,6 +810,7 @@
   }
 
   function clearStarShow() {
+    stopConfetti();
     document.querySelectorAll('.star-show, .star-rain').forEach((el) => el.remove());
     document.removeEventListener('pointerdown', skipStarShow, true);
     clearTimeout(starShowTimer);
@@ -772,6 +916,100 @@
     starShowDone = done;
     document.addEventListener('pointerdown', skipStarShow, true);
     starShowTimer = setTimeout(finishStarShow, reduce ? 600 : endDelay + 1800);
+  }
+
+  // ---------- konfetti po oczyszczeniu planszy ----------
+  let confettiRaf = 0;
+  function stopConfetti() {
+    cancelAnimationFrame(confettiRaf);
+    confettiRaf = 0;
+    document.querySelectorAll('.confetti').forEach((el) => el.remove());
+  }
+
+  function confetti() {
+    stopConfetti();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    const cv = document.createElement('canvas');
+    cv.className = 'confetti';
+    cv.setAttribute('aria-hidden', 'true');
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    cv.width = W * dpr;
+    cv.height = H * dpr;
+    document.body.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const COLORS = ['#ff4f6d', '#ffc400', '#3ddc84', '#4fb3ff', '#b76bff', '#ff8a3d', '#ffffff', '#ff7ad1'];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const scale = Math.max(0.7, Math.min(1.4, Math.min(W, H) / 600));
+    const parts = [];
+    const add = (x, y, angle, spread, speed, n, delay) => {
+      for (let i = 0; i < n; i++) {
+        const a = angle + rnd(-spread, spread);
+        const v = rnd(0.55, 1) * speed * scale;
+        parts.push({
+          x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+          w: rnd(6, 11) * scale, h: rnd(9, 16) * scale,
+          rot: rnd(0, Math.PI * 2), vr: rnd(-0.25, 0.25),
+          flip: rnd(0, Math.PI * 2), vf: rnd(0.08, 0.2),
+          color: COLORS[i % COLORS.length], round: Math.random() < 0.25,
+          delay,
+        });
+      }
+    };
+    // dwie salwy z dolnych rogów i jedna ze środka u góry, potem deszcz z góry
+    add(0, H, -Math.PI / 3, 0.35, 21, 70, 0);
+    add(W, H, -Math.PI * 2 / 3, 0.35, 21, 70, 0);
+    add(W / 2, H * 0.35, -Math.PI / 2, Math.PI, 13, 60, 350);
+    for (let i = 0; i < 70; i++) {
+      add(rnd(0, W), rnd(-60, -10), Math.PI / 2, 0.3, 2, 1, 700 + rnd(0, 1600));
+    }
+
+    const t0 = performance.now();
+    let last = t0;
+    const DURATION = 6000;
+    const frame = (now) => {
+      const dt = Math.min(2.5, (now - last) / 16.7);
+      last = now;
+      const el = now - t0;
+      ctx.clearRect(0, 0, W, H);
+      const fade = el > DURATION - 1000 ? Math.max(0, (DURATION - el) / 1000) : 1;
+      let alive = 0;
+      for (const p of parts) {
+        if (el < p.delay) { alive++; continue; }
+        p.vy += 0.32 * dt * scale;
+        p.vx *= Math.pow(0.985, dt);
+        p.vy *= Math.pow(0.985, dt);
+        // papierki opadają powoli i kołyszą się na boki
+        if (p.vy > 3.2 * scale) p.vy = 3.2 * scale;
+        p.x += (p.vx + Math.sin(p.flip) * 0.8) * dt;
+        p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+        p.flip += p.vf * dt;
+        if (p.y > H + 30) continue;
+        alive++;
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.scale(1, Math.cos(p.flip));
+        ctx.fillStyle = p.color;
+        if (p.round) {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        }
+        ctx.restore();
+      }
+      if (el < DURATION && alive) confettiRaf = requestAnimationFrame(frame);
+      else stopConfetti();
+    };
+    confettiRaf = requestAnimationFrame(frame);
   }
 
   // deszcz migoczących gwiazdek na całym ekranie
@@ -919,8 +1157,8 @@
     $('#statLeft').textContent = left;
     $('#statDiff').textContent = S.diffKey;
     const starStat = $('#statStarsBox');
-    starStat.hidden = !settings.stars;
-    if (settings.stars) {
+    starStat.hidden = !S.stars;
+    if (S.stars) {
       const stack = S.tiles.filter((t) => t.loc === 'board');
       $('#statStars').textContent = `${stack.filter((t) => t.star).length}/${stack.length}`;
     }
@@ -947,12 +1185,12 @@
   }, 500);
 
   let toastTimer = null;
-  function toast(msg) {
+  function toast(msg, ms = 2400) {
     const el = $('#toast');
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms);
   }
 
   // ---------- okna ----------
@@ -1057,6 +1295,10 @@
       dim: [
         { v: false, label: 'Wyłączone' },
         { v: true, label: 'Włączone' },
+      ],
+      mode: [
+        { v: 'fixed', label: 'Stały', sub: 'każdy poziom według ustawień' },
+        { v: 'variable', label: 'Zmienny', sub: 'nowy układ i obrazki co poziom, coraz więcej zakrytych' },
       ],
       difficulty: [1, 2, 3, 4, 5].map((n) => ({ v: n, label: String(n), sub: DIFFICULTY[n].label })),
     };

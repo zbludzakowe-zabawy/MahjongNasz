@@ -92,12 +92,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: 8px; overflow: hidden;
 }
 .board { position: relative; --tw: 56px; --th: 73px; --d: 6px; }
-.board.mixing .tile:not(.gone) { animation: mix .5s ease; }
-@keyframes mix {
-  0% { transform: scale(1) rotate(0); }
-  40% { transform: scale(.75) rotate(8deg); }
-  100% { transform: scale(1) rotate(0); }
-}
+/* podczas miksowania kafelki latają po planszy (animacja w game.js) */
+.board.mixing .tile { pointer-events: none; transition: none; }
+.board.mixing .tile:not(.gone) { box-shadow: 0 0 0 1.5px var(--tile-edge), 0 6px 14px rgba(0, 0, 0, .45); }
 
 .tile {
   position: absolute;
@@ -334,6 +331,7 @@ kbd { background: var(--panel-2); border: 1px solid rgba(255,255,255,.25); borde
 }
 .star-show.finished .spark { animation-iteration-count: 2; }
 
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 250000; }
 .star-rain { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 250000; }
 .star-rain span {
   position: absolute; top: -40px; opacity: 0;
