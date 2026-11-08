@@ -44,6 +44,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: rgba(0, 0, 0, .25);
   border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
+/* aplikacja na iPhonie rysuje się pod paskiem stanu */
+.topbar { padding-top: calc(8px + env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .logo { margin: 0; font-size: 1.25rem; letter-spacing: .02em; white-space: nowrap; }
 .logo span { color: var(--accent); }
 .stats { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
@@ -200,6 +202,33 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ---------- aplikacja: instalacja i aktualizacja ---------- */
+.app-banner {
+  position: fixed; left: 0; right: 0; margin: 0 auto;
+  bottom: calc(108px + env(safe-area-inset-bottom));
+  z-index: 150000;
+  display: flex; align-items: center; gap: 10px;
+  width: min(520px, calc(100vw - 24px));
+  padding: 10px 12px; border-radius: 16px;
+  background: var(--panel); border: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  animation: rise .25s ease;
+}
+.app-banner[hidden] { display: none; }
+.app-banner img { border-radius: 10px; flex: none; }
+.app-banner-text { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: .85rem; color: var(--muted); min-width: 0; }
+.app-banner-text strong { color: var(--ink); font-size: .95rem; }
+.app-banner .btn { padding: 8px 14px; flex: none; }
+.banner-close {
+  flex: none; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .18); background: transparent; color: var(--muted);
+}
+.share-ico { width: 1.1em; height: 1.1em; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#install-banner .only-prompt, #install-banner .only-ios { display: none; }
+#install-banner[data-mode="prompt"] .only-prompt { display: inline; }
+#install-banner[data-mode="prompt"] button.only-prompt { display: inline-block; }
+#install-banner[data-mode="ios"] .only-ios { display: inline; }
+
 /* ---------- okna ---------- */
 .modal {
   position: fixed; inset: 0; z-index: 200000;
@@ -266,7 +295,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 kbd { background: var(--panel-2); border: 1px solid rgba(255,255,255,.25); border-radius: 4px; padding: 0 5px; font-size: .85em; }
 
 @media (max-width: 720px) {
-  .topbar { padding: 6px 10px; gap: 6px 10px; }
+  .topbar { padding: calc(6px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left)); gap: 6px 10px; }
   .logo { font-size: 1rem; flex: 1; }
   .stats { order: 3; flex-basis: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 4px; }
   .stat { min-width: 0; flex: 1; padding: 2px 4px; font-size: .85rem; }
@@ -277,4 +306,6 @@ kbd { background: var(--panel-2); border: 1px solid rgba(255,255,255,.25); borde
   .tray-title { display: none; }
   .slot { --tw: 44px; --th: 57px; --d: 4px; }
   .toast { bottom: 100px; }
+  .app-banner { bottom: calc(92px + env(safe-area-inset-bottom)); gap: 8px; }
+  .app-banner .btn { padding: 8px 10px; }
 }
