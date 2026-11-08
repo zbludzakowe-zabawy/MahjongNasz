@@ -20,8 +20,24 @@
     5: { ratio: 1, glow: false, solvable: true, label: 'Ekspert' },
   };
 
-  const DEFAULTS = { layout: 'turtle', tileset: 'classic', hidden: 'none', stars: false, dim: false, difficulty: 3 };
+  // Domyślny układ dla każdego rodzaju urządzenia
+  const DEVICE_LAYOUT = { phone: 'castle', desktop: 'turtle' };
+
+  function detectDevice() {
+    try {
+      const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const small = Math.min(window.screen.width, window.screen.height) < 768;
+      return coarse && small ? 'phone' : 'desktop';
+    } catch (e) {
+      return 'desktop';
+    }
+  }
+
+  const DEFAULTS = { layout: null, tileset: 'classic', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null };
   const settings = loadSettings();
+  if (!settings.device) settings.device = detectDevice();
+  if (!settings.layout) settings.layout = DEVICE_LAYOUT[settings.device];
+  let showAllLayouts = false; // w trybie telefonu: pokaż też układy komputerowe
 
   let S = null; // stan bieżącej gry
   let tileEls = [];
@@ -110,7 +126,7 @@
 
   // ---------- nowa gra ----------
   function newGame(level) {
-    const layout = Layouts.get(settings.layout);
+    const layout = Layouts.get(settings.layout, settings.device);
     const tileset = TileSets.get(settings.tileset);
     const diff = DIFFICULTY[settings.difficulty] || DIFFICULTY[3];
 
@@ -171,6 +187,7 @@
     hideModals();
     buildBoard();
     render();
+    layoutBoard();
   }
 
   // ---------- ruchy ----------
@@ -223,12 +240,24 @@
     S.tray[slot] = t.id;
     S.selected = null;
     S.newStars = [];
+    // dwa takie same kafelki w schowku od razu tworzą parę
+    const twin = S.tray.map((id) => (id === null ? null : S.tiles[id]))
+      .find((o) => o && o !== t && o.face === t.face);
+    if (twin) {
+      S.hint = [twin.id, t.id];
+      render();
+      setTimeout(() => {
+        if (t.loc === 'tray' && twin.loc === 'tray') removePair(twin, t, true);
+      }, 220);
+      return;
+    }
     afterMove();
   }
 
-  function removePair(a, b) {
+  // skipSnapshot – ruch był już zapisany (para dopasowana w schowku)
+  function removePair(a, b, skipSnapshot) {
     clearHint();
-    snapshot();
+    if (!skipSnapshot) snapshot();
     for (const t of [a, b]) {
       if (t.loc === 'tray') S.tray[t.slot] = null;
       t.loc = 'gone';
@@ -474,6 +503,7 @@
       el.style.left = `${(t.x / 2) * tw + (maxZ - t.z) * d}px`;
       el.style.top = `${(t.y / 2) * th + (maxZ - t.z) * d}px`;
       el.style.zIndex = String(t.z * 10000 + t.y * 100 + t.x + 10);
+      el.style.setProperty('--shade', String(Math.min(0.2, (maxZ - t.z) * 0.045)));
     });
   }
 
@@ -586,10 +616,40 @@
     m.hidden = false;
   }
 
+  function layoutOpt(l) {
+    return { v: l.id, label: l.name, sub: `${l.count} kafelków · ${l.cols}×${l.rows}` };
+  }
+
+  function layoutOptions() {
+    const phone = settings.device === 'phone';
+    const opts = Layouts.forDevice(settings.device).map(layoutOpt);
+    opts.push({ v: 'random', label: 'Losowy', sub: phone ? 'z układów na telefon' : 'za każdym razem inny' });
+    if (phone) {
+      const big = Layouts.list.filter((l) => !l.phone);
+      const chosenBig = big.some((l) => l.id === settings.layout);
+      if (showAllLayouts || chosenBig) {
+        opts.push({ sep: 'Większe układy (domyślnie na komputer)' });
+        opts.push(...big.map(layoutOpt));
+      }
+      if (!chosenBig) {
+        opts.push({
+          action: () => { showAllLayouts = !showAllLayouts; buildMenu(); },
+          label: showAllLayouts ? 'Mniej ▴' : 'Więcej układów ▾',
+          sub: showAllLayouts ? 'tylko na telefon' : `+${big.length} większych`,
+        });
+      }
+    }
+    return opts;
+  }
+
   function buildMenu() {
+    const [pw, ph] = Layouts.PHONE_MAX;
     const groups = {
-      layout: [...Layouts.list.map((l) => ({ v: l.id, label: l.name, sub: `${l.count} kafelków` })),
-        { v: 'random', label: 'Losowy', sub: 'za każdym razem inny' }],
+      device: [
+        { v: 'phone', label: '📱 Telefon', sub: `układy do ${pw}×${ph} kafelków` },
+        { v: 'desktop', label: '🖥️ Komputer', sub: 'wszystkie układy' },
+      ],
+      layout: layoutOptions(),
       tileset: TileSets.list.map((s) => ({
         v: s.id, label: s.name,
         html: `<span class="mini-tiles">${s.preview.map((i) => `<span class="mini">${s.render(i)}</span>`).join('')}</span>`,
@@ -613,14 +673,33 @@
       const box = document.querySelector(`[data-setting="${key}"]`);
       box.innerHTML = '';
       opts.forEach((o) => {
+        if (o.sep) {
+          const h = document.createElement('div');
+          h.className = 'opts-sep';
+          h.textContent = o.sep;
+          box.appendChild(h);
+          return;
+        }
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'opt';
+        b.className = 'opt' + (o.action ? ' opt-more' : '');
         b.innerHTML = (o.html || '') + `<span class="opt-label">${o.label}</span>` + (o.sub ? `<span class="opt-sub">${o.sub}</span>` : '');
+        if (o.action) {
+          b.addEventListener('click', o.action);
+          box.appendChild(b);
+          return;
+        }
         b.setAttribute('aria-pressed', String(settings[key] === o.v));
         b.addEventListener('click', () => {
           settings[key] = o.v;
+          if (key === 'device') {
+            // przy zmianie urządzenia wybierz pasujący układ, jeśli obecny jest za duży
+            const cur = Layouts.list.find((l) => l.id === settings.layout);
+            if (o.v === 'phone' && cur && !cur.phone) settings.layout = DEVICE_LAYOUT.phone;
+            showAllLayouts = false;
+          }
           saveSettings();
+          if (key === 'device') return buildMenu();
           box.querySelectorAll('.opt').forEach((x) => x.setAttribute('aria-pressed', 'false'));
           b.setAttribute('aria-pressed', 'true');
         });
@@ -657,6 +736,8 @@
     }
   });
   window.addEventListener('resize', layoutBoard);
+  // rozmiar planszy zależy od wysokości schowka i paska – przeliczaj przy każdej zmianie
+  if (window.ResizeObserver) new ResizeObserver(() => layoutBoard()).observe(boardWrap);
   document.addEventListener('keydown', (e) => {
     if (e.target.closest && e.target.closest('input,textarea')) return;
     if (e.key === 'h' || e.key === 'l') useHint();

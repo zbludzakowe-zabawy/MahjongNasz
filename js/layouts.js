@@ -236,16 +236,158 @@ const Layouts = (() => {
         return L; // 48
       },
     },
+    {
+      id: 'tree',
+      name: 'Choinka',
+      build() {
+        const L = [];
+        T(L, 0, 3, 0);
+        R(L, 0, 2.5, 1, 2, 1);
+        R(L, 0, 2, 2, 3, 1);
+        R(L, 0, 1.5, 3, 4, 1);
+        R(L, 0, 1, 4, 5, 1);
+        R(L, 0, 0.5, 5, 6, 1);
+        R(L, 0, 0, 6, 7, 1);
+        T(L, 0, 3, 7);
+        T(L, 0, 3, 8);
+        R(L, 1, 2, 3, 3, 1);
+        R(L, 1, 1.5, 4, 4, 1);
+        R(L, 1, 1, 5, 5, 1);
+        R(L, 1, 0.5, 6, 6, 1);
+        R(L, 2, 1.5, 5, 4, 1);
+        R(L, 2, 1, 6, 5, 1);
+        T(L, 3, 3, 6);
+        return L; // 58
+      },
+    },
+    {
+      id: 'butterfly',
+      name: 'Motyl',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 3, 3);
+        R(L, 0, 5, 0, 3, 3);
+        R(L, 0, 0, 4, 3, 3);
+        R(L, 0, 5, 4, 3, 3);
+        R(L, 0, 3, 0, 2, 7);
+        R(L, 0, 1, 3, 2, 1);
+        R(L, 0, 5, 3, 2, 1);
+        R(L, 1, 0.5, 0.5, 2, 2);
+        R(L, 1, 5.5, 0.5, 2, 2);
+        R(L, 1, 0.5, 4.5, 2, 2);
+        R(L, 1, 5.5, 4.5, 2, 2);
+        R(L, 1, 3, 1, 2, 5);
+        R(L, 2, 3, 2, 2, 3);
+        R(L, 3, 3, 3, 2, 1);
+        return L; // 88
+      },
+    },
+    {
+      id: 'castle',
+      name: 'Zamek',
+      build() {
+        const L = [];
+        R(L, 0, 0, 1, 8, 7);
+        T(L, 0, 0, 0);
+        T(L, 0, 2, 0);
+        T(L, 0, 5, 0);
+        T(L, 0, 7, 0);
+        R(L, 1, 0, 1, 2, 2);
+        R(L, 1, 6, 1, 2, 2);
+        R(L, 1, 0, 6, 2, 2);
+        R(L, 1, 6, 6, 2, 2);
+        R(L, 1, 3, 3, 2, 3);
+        T(L, 2, 0.5, 1.5);
+        T(L, 2, 6.5, 1.5);
+        T(L, 2, 0.5, 6.5);
+        T(L, 2, 6.5, 6.5);
+        R(L, 2, 3, 4, 2, 1);
+        return L; // 88
+      },
+    },
+    {
+      id: 'tower',
+      name: 'Wieża',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 6, 9);
+        R(L, 1, 1, 1, 4, 7);
+        R(L, 2, 2, 2, 2, 5);
+        T(L, 3, 2.5, 3);
+        T(L, 3, 2.5, 5);
+        return L; // 94
+      },
+    },
+    {
+      id: 'cup',
+      name: 'Puchar',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 8, 1);
+        R(L, 0, 0, 1, 8, 1);
+        R(L, 0, 0.5, 2, 7, 1);
+        R(L, 0, 1, 3, 6, 1);
+        R(L, 0, 2, 4, 4, 1);
+        R(L, 0, 3, 5, 2, 1);
+        R(L, 0, 3, 6, 2, 1);
+        R(L, 0, 2, 7, 4, 1);
+        R(L, 0, 1, 8, 6, 1);
+        R(L, 1, 0.5, 0, 7, 1);
+        R(L, 1, 0.5, 1, 7, 1);
+        R(L, 1, 1, 2, 6, 1);
+        R(L, 1, 1.5, 3, 5, 1);
+        R(L, 1, 2.5, 4, 3, 1);
+        R(L, 1, 1.5, 8, 5, 1);
+        R(L, 2, 1, 0, 6, 1);
+        R(L, 2, 1, 1, 6, 1);
+        R(L, 2, 1.5, 2, 5, 1);
+        T(L, 2, 3.5, 8);
+        return L; // 98
+      },
+    },
+    {
+      id: 'littleturtle',
+      name: 'Żółwik',
+      build() {
+        const L = [];
+        R(L, 0, 1, 0, 6, 1);
+        R(L, 0, 0, 1, 8, 7);
+        T(L, 0, 3.5, 8);
+        R(L, 1, 1, 2, 6, 5);
+        R(L, 2, 2, 3, 4, 3);
+        T(L, 3, 3.5, 4);
+        return L; // 106
+      },
+    },
   ];
 
+  // Telefon: układy mieszczące się w 8×9 kafelkach (w dowolnej orientacji,
+  // bo na pionowym ekranie szerokie układy są obracane).
+  const PHONE_MAX = [8, 9];
+
+  list.forEach((l) => {
+    const pos = l.build();
+    l.count = pos.length;
+    const xs = pos.map((p) => p.x);
+    const ys = pos.map((p) => p.y);
+    l.cols = (Math.max(...xs) - Math.min(...xs) + 2) / 2;
+    l.rows = (Math.max(...ys) - Math.min(...ys) + 2) / 2;
+    l.phone = Math.min(l.cols, l.rows) <= PHONE_MAX[0] && Math.max(l.cols, l.rows) <= PHONE_MAX[1];
+  });
   // od najmniejszych do największych
-  list.forEach((l) => (l.count = l.build().length));
   list.sort((a, b) => a.count - b.count);
 
   return {
     list,
-    get(id) {
-      if (id === 'random') return list[Math.floor(Math.random() * list.length)];
+    PHONE_MAX,
+    forDevice(device) {
+      return device === 'phone' ? list.filter((l) => l.phone) : list;
+    },
+    get(id, device) {
+      if (id === 'random') {
+        const pool = this.forDevice(device);
+        return pool[Math.floor(Math.random() * pool.length)];
+      }
       return list.find((l) => l.id === id) || list[0];
     },
   };

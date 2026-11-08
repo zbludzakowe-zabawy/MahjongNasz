@@ -15,10 +15,14 @@ Każdy push do `main` publikuje grę na GitHub Pages (workflow `.github/workflow
 Zbieraj pary takich samych kafelków. Kafelek jest wolny, gdy nic na nim nie leży i ma wolny lewy **lub** prawy bok.
 
 ### Schowek (4 miejsca)
-Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dwukrotnie). Kafelki ze schowka można łączyć w pary z kafelkami z planszy albo z innymi kafelkami w schowku.
+Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dwukrotnie). Kafelki ze schowka można łączyć w pary z kafelkami z planszy. Gdy do schowka trafią dwa takie same kafelki, od razu tworzą parę i znikają.
 
 ### Opcje gry
-- **Układ stosu:** Domek (32), Wąż (32), Diament (40), Klepsydra (40), Most (40), Mała piramida (40), Serce (48), Mały kwadrat (56), Kwiat (76), Forteca (84), Krzyż (86), Schody (112), Piramida (120), Żółw (144) albo Losowy.
+- **Urządzenie:** 📱 Telefon albo 🖥️ Komputer (wykrywane automatycznie przy pierwszym uruchomieniu). Na telefonie domyślnie widać tylko układy mieszczące się w 8×9 kafelkach; większe można odsłonić przyciskiem **Więcej układów** i też w nie zagrać. Na komputerze dostępne są wszystkie układy.
+- **Układ stosu:**
+  - na telefon (do 8×9): Domek (32), Wąż (32), Diament (40), Klepsydra (40), Mała piramida (40), Serce (48), Mały kwadrat (56), Choinka (58), Motyl (88), Zamek (88), Wieża (94), Puchar (98), Żółwik (106), Piramida (120);
+  - większe (domyślnie na komputer): Most (40), Kwiat (76), Forteca (84), Krzyż (86), Schody (112), Żółw (144);
+  - albo Losowy (na telefonie losowany spośród układów na telefon).
 - **Obrazki na kafelkach:** Klasyczny (kropki, bambusy, znaki, wiatry, smoki, kwiaty i pory roku), Owoce i warzywa, Zwierzęta, Natura, Sport i zabawa, Pojazdy, Słodycze.
 - **Kafelki rewersem do góry:** brak, kilka (6) albo kilkanaście (14). Zakryty kafelek odwraca się dopiero wtedy, gdy nic na nim nie leży.
 - **Gwiazdki:** na starcie 4 kafelki mają gwiazdkę. Zebranie pary z 1 gwiazdką daje gwiazdki 2 kafelkom na stosie, a pary z 2 gwiazdkami – 4 kafelkom. Wygrywasz po oczyszczeniu planszy **albo** gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki w schowku się nie liczą.
