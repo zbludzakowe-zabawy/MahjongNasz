@@ -806,7 +806,15 @@
     const el = document.createElement('div');
     el.className = 'tile';
     el.innerHTML = `<div class="face">${S.tileset.render(t.face)}</div><div class="back"></div><div class="star">${starSvg()}</div>`;
+    el.dataset.face = String(t.face);
     return el;
+  }
+
+  // odśwież obrazek kafelka, jeśli zmienił się jego wzór (np. po miksowaniu lub cofnięciu)
+  function syncFace(el, t) {
+    if (el.dataset.face === String(t.face)) return;
+    el.querySelector('.face').innerHTML = S.tileset.render(t.face);
+    el.dataset.face = String(t.face);
   }
 
   function buildBoard() {
@@ -866,6 +874,7 @@
       const el = tileEls[i];
       const free = isFree(t);
       const c = el.classList;
+      syncFace(el, t);
       c.toggle('gone', t.loc !== 'board');
       c.toggle('blocked', settings.dim && t.loc === 'board' && !free);
       c.toggle('hidden', t.loc === 'board' && !isRevealed(t));
