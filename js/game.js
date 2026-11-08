@@ -9,19 +9,18 @@
 
   // Poziom trudności (1-5) działa niezależnie od pozostałych opcji:
   //  ratio    – ile par przypada na jeden rodzaj obrazka (więcej = łatwiej)
-  //  dim      – przyciemnianie zablokowanych kafelków
   //  glow     – podświetlanie pasujących kafelków po zaznaczeniu
   //  solvable – gwarancja, że rozdanie da się rozwiązać
   // Przy ratio 1 każdy obrazek występuje (w miarę możliwości) tylko w jednej parze.
   const DIFFICULTY = {
-    1: { ratio: 4, dim: true, glow: true, solvable: true, label: 'Bardzo łatwy' },
-    2: { ratio: 3, dim: true, glow: false, solvable: true, label: 'Łatwy' },
-    3: { ratio: 2, dim: false, glow: false, solvable: true, label: 'Średni' },
-    4: { ratio: 1.5, dim: false, glow: false, solvable: true, label: 'Trudny' },
-    5: { ratio: 1, dim: false, glow: false, solvable: true, label: 'Ekspert' },
+    1: { ratio: 4, glow: true, solvable: true, label: 'Bardzo łatwy' },
+    2: { ratio: 3, glow: false, solvable: true, label: 'Łatwy' },
+    3: { ratio: 2, glow: false, solvable: true, label: 'Średni' },
+    4: { ratio: 1.5, glow: false, solvable: true, label: 'Trudny' },
+    5: { ratio: 1, glow: false, solvable: true, label: 'Ekspert' },
   };
 
-  const DEFAULTS = { layout: 'turtle', tileset: 'classic', hidden: 'none', stars: false, difficulty: 3 };
+  const DEFAULTS = { layout: 'turtle', tileset: 'classic', hidden: 'none', stars: false, dim: false, difficulty: 3 };
   const settings = loadSettings();
 
   let S = null; // stan bieżącej gry
@@ -256,7 +255,9 @@
     render();
     const left = S.tiles.filter((t) => t.loc !== 'gone');
     if (left.length === 0) return win('clear');
-    if (settings.stars && left.every((t) => t.star)) return win('stars');
+    // gwiazdki liczą się tylko na stosie – kafelki w schowku są pomijane
+    const onStack = left.filter((t) => t.loc === 'board');
+    if (settings.stars && onStack.length && onStack.every((t) => t.star)) return win('stars');
     if (isStuck()) setTimeout(showStuck, 450);
   }
 
@@ -484,7 +485,7 @@
       const free = isFree(t);
       const c = el.classList;
       c.toggle('gone', t.loc !== 'board');
-      c.toggle('blocked', S.diff.dim && t.loc === 'board' && !free);
+      c.toggle('blocked', settings.dim && t.loc === 'board' && !free);
       c.toggle('hidden', t.loc === 'board' && !isRevealed(t));
       c.toggle('selected', S.selected === t.id);
       c.toggle('hint', S.hint.includes(t.id));
@@ -529,8 +530,8 @@
     const starStat = $('#statStarsBox');
     starStat.hidden = !settings.stars;
     if (settings.stars) {
-      const st = S.tiles.filter((t) => t.loc !== 'gone' && t.star).length;
-      $('#statStars').textContent = `${st}/${left}`;
+      const stack = S.tiles.filter((t) => t.loc === 'board');
+      $('#statStars').textContent = `${stack.filter((t) => t.star).length}/${stack.length}`;
     }
     for (const k of ['hint', 'undo', 'shuffle']) {
       $(`#cnt-${k}`).textContent = S.helps[k];
@@ -587,7 +588,7 @@
 
   function buildMenu() {
     const groups = {
-      layout: [...Layouts.list.map((l) => ({ v: l.id, label: l.name, sub: `${l.build().length} kafelków` })),
+      layout: [...Layouts.list.map((l) => ({ v: l.id, label: l.name, sub: `${l.count} kafelków` })),
         { v: 'random', label: 'Losowy', sub: 'za każdym razem inny' }],
       tileset: TileSets.list.map((s) => ({
         v: s.id, label: s.name,
@@ -601,6 +602,10 @@
       stars: [
         { v: false, label: 'Wyłączone' },
         { v: true, label: 'Włączone', sub: `start: ${INITIAL_STARS} gwiazdki` },
+      ],
+      dim: [
+        { v: false, label: 'Wyłączone' },
+        { v: true, label: 'Włączone' },
       ],
       difficulty: [1, 2, 3, 4, 5].map((n) => ({ v: n, label: String(n), sub: DIFFICULTY[n].label })),
     };
