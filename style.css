@@ -309,3 +309,47 @@ kbd { background: var(--panel-2); border: 1px solid rgba(255,255,255,.25); borde
   .app-banner { bottom: calc(92px + env(safe-area-inset-bottom)); gap: 8px; }
   .app-banner .btn { padding: 8px 10px; }
 }
+
+/* ---------- gwiezdne zwycięstwo ---------- */
+.star-show { position: absolute; left: 0; top: 0; z-index: 190000; pointer-events: none; overflow: visible; }
+.star-show .trail, .star-show .trail-glow {
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+  animation: trail-draw linear forwards;
+}
+.star-show .trail { stroke: url(#trailGrad); }
+.star-show .trail-glow { stroke: #ffe58a; opacity: .35; filter: url(#starGlow); }
+@keyframes trail-draw { to { stroke-dashoffset: 0; } }
+.star-show .show-star { opacity: 0; animation: star-in .6s cubic-bezier(.3, 1.6, .5, 1) var(--delay) forwards; }
+.star-show .show-star.final > polygon:first-child { animation: twinkle 1.2s ease-in-out calc(var(--delay) + .6s) infinite alternate; transform-box: fill-box; transform-origin: center; }
+.star-show .spark { opacity: 0; animation: spark 1.1s ease-in-out var(--sd) infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes star-in {
+  0% { opacity: 0; transform: scale(0) rotate(-120deg); }
+  70% { opacity: 1; transform: scale(1.35) rotate(10deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes twinkle { from { opacity: 1; } to { opacity: .55; } }
+@keyframes spark {
+  0%, 100% { opacity: 0; transform: scale(.2) rotate(0); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+.star-show.finished .spark { animation-iteration-count: 2; }
+
+.star-rain { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 250000; }
+.star-rain span {
+  position: absolute; top: -40px; opacity: 0;
+  animation: star-fall var(--fall) ease-in var(--rd) forwards;
+}
+.star-rain svg { width: 100%; height: 100%; filter: drop-shadow(0 0 4px rgba(255, 230, 140, .9)); }
+@keyframes star-fall {
+  0% { opacity: 0; transform: translateY(0) rotate(0); }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(105vh) rotate(540deg); }
+}
+.star-legend { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; }
+.legend-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .star-show .trail, .star-show .trail-glow { animation-duration: 0s !important; }
+  .star-show .show-star { animation-duration: .01s; animation-delay: 0s; }
+  .star-show .spark { display: none; }
+}
