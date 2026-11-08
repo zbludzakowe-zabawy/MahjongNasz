@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mahjong Nasz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="logo">Mahjong <span>Nasz</span></h1>
+    <div class="stats">
+      <div class="stat"><span class="stat-k">Poziom</span><span id="statLevel">1</span></div>
+      <div class="stat"><span class="stat-k">Trudność</span><span id="statDiff">3</span></div>
+      <div class="stat"><span class="stat-k">Kafelki</span><span id="statLeft">0</span></div>
+      <div class="stat" id="statStarsBox" hidden><span class="stat-k">Gwiazdki</span><span id="statStars">0</span></div>
+      <div class="stat"><span class="stat-k">Czas</span><span id="statTime">0:00</span></div>
+    </div>
+    <div class="helps">
+      <button class="help-btn" id="btn-hint" title="Lupa – pokaż parę (H)"><span class="ico">🔍</span><span class="help-name">Lupa</span><span class="cnt" id="cnt-hint">2</span></button>
+      <button class="help-btn" id="btn-undo" title="Cofnij ostatni ruch (U)"><span class="ico">↶</span><span class="help-name">Cofnij</span><span class="cnt" id="cnt-undo">2</span></button>
+      <button class="help-btn" id="btn-shuffle" title="Miksuj kafelki (M)"><span class="ico">🔀</span><span class="help-name">Miksuj</span><span class="cnt" id="cnt-shuffle">2</span></button>
+      <button class="icon-btn" id="btn-help" title="Zasady">?</button>
+      <button class="icon-btn" id="btn-menu" title="Ustawienia / nowa gra">☰</button>
+    </div>
+  </header>
+
+  <main class="play">
+    <div id="boardWrap" class="board-wrap">
+      <div id="board" class="board"></div>
+    </div>
+    <section class="tray-box" aria-label="Schowek">
+      <div class="tray-title">Schowek</div>
+      <div id="tray" class="tray"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal" id="menuModal" hidden>
+    <div class="modal-card wide">
+      <h2>Nowa gra</h2>
+      <div class="setting">
+        <h3>Układ stosu</h3>
+        <div class="opts" data-setting="layout"></div>
+      </div>
+      <div class="setting">
+        <h3>Obrazki na kafelkach</h3>
+        <div class="opts" data-setting="tileset"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting">
+          <h3>Kafelki rewersem do góry</h3>
+          <div class="opts" data-setting="hidden"></div>
+        </div>
+        <div class="setting">
+          <h3>Gra z gwiazdkami</h3>
+          <div class="opts" data-setting="stars"></div>
+        </div>
+      </div>
+      <div class="setting">
+        <h3>Poziom trudności</h3>
+        <div class="opts diff" data-setting="difficulty"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn" id="menuClose">Wróć do gry</button>
+        <button class="btn primary" id="menuStart">Graj ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="endModal" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title"></h2>
+      <div class="modal-body"></div>
+      <div class="modal-buttons"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="helpModal" hidden>
+    <div class="modal-card wide">
+      <h2>Zasady</h2>
+      <ul class="rules">
+        <li>Zbieraj pary <b>takich samych</b> kafelków. Kafelek można wziąć, gdy nic na nim nie leży i ma wolny lewy <i>lub</i> prawy bok.</li>
+        <li><b>Schowek</b> ma 4 miejsca. Zaznacz wolny kafelek i kliknij puste miejsce (albo kliknij kafelek dwukrotnie), aby go odłożyć. Kafelki ze schowka łączysz w pary z kafelkami z planszy lub ze schowka.</li>
+        <li><b>Kafelki rewersem do góry</b> odwracają się dopiero, gdy nic na nich nie leży.</li>
+        <li><b>Gwiazdki</b>: zebranie pary z jedną gwiazdką dodaje gwiazdki 2 kafelkom na stosie, z dwiema gwiazdkami – 4 kafelkom. Wygrywasz, gdy wyczyścisz planszę <i>albo</i> gdy wszystkie pozostałe kafelki mają gwiazdki.</li>
+        <li><b>Pomoce</b> (po 2 na każdy poziom): 🔍 lupa pokazuje dostępną parę, ↶ cofnij cofa ostatni ruch, 🔀 miksuj tasuje pozostałe kafelki na stosie.</li>
+        <li><b>Trudność 1–5</b>: im wyżej, tym więcej różnych obrazków; na poziomach 1–2 zablokowane kafelki są przyciemnione, a na poziomie 1 dodatkowo podświetlane są kafelki pasujące do zaznaczonego. Każde rozdanie da się rozwiązać.</li>
+        <li>Skróty: <kbd>H</kbd> lupa, <kbd>U</kbd> cofnij, <kbd>M</kbd> miksuj.</li>
+      </ul>
+      <div class="modal-buttons">
+        <button class="btn primary" id="helpClose">Rozumiem</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/layouts.js"></script>
+  <script src="js/tilesets.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
