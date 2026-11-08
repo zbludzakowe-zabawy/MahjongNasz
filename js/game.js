@@ -67,6 +67,77 @@
     } catch (e) { /* brak dostępu do pamięci – trudno */ }
   }
 
+  // ---------- zapis bieżącej partii ----------
+  // Telefon potrafi zamknąć aplikację w tle, a aktualizacja przeładowuje stronę –
+  // partia jest więc zapisywana po każdym ruchu i wraca po ponownym otwarciu.
+  const GAME_KEY = 'mahjongnasz-game';
+
+  function saveGame() {
+    if (!S) return;
+    try {
+      if (S.over && !S.tiles.some((t) => t.loc !== 'gone')) {
+        localStorage.removeItem(GAME_KEY);
+        return;
+      }
+      localStorage.setItem(GAME_KEY, JSON.stringify({
+        v: 1,
+        layout: S.layout.id,
+        tileset: S.tileset.id,
+        difficulty: S.diffKey,
+        tiles: S.tiles.map((t) => [t.x, t.y, t.z, t.face, t.star ? 1 : 0, t.faceDown ? 1 : 0, t.loc, t.slot]),
+        tray: S.tray,
+        helps: S.helps,
+        // cofnąć można najwyżej tyle ruchów, ile zostało cofnięć
+        history: S.helps.undo > 0 ? S.history.slice(-S.helps.undo) : [],
+        solution: S.solution,
+        level: S.level,
+        elapsed: S.over ? S.elapsed : Date.now() - S.start,
+      }));
+    } catch (e) { /* brak miejsca lub dostępu – gra działa dalej bez zapisu */ }
+  }
+
+  function clearSavedGame() {
+    try { localStorage.removeItem(GAME_KEY); } catch (e) { /* trudno */ }
+  }
+
+  function restoreGame() {
+    let g;
+    try {
+      g = JSON.parse(localStorage.getItem(GAME_KEY) || 'null');
+    } catch (e) {
+      return false;
+    }
+    if (!g || g.v !== 1 || !Array.isArray(g.tiles) || !g.tiles.length) return false;
+    const layout = Layouts.list.find((l) => l.id === g.layout);
+    const tileset = TileSets.list.find((t) => t.id === g.tileset);
+    const diff = DIFFICULTY[g.difficulty];
+    if (!layout || !tileset || !diff) return false;
+    const tiles = g.tiles.map(([x, y, z, face, star, faceDown, loc, slot], id) => ({
+      id, x, y, z, face, star: !!star, faceDown: !!faceDown, loc, slot,
+    }));
+    computeNeighbors(tiles);
+    S = {
+      tiles, tileset, diff, diffKey: g.difficulty, layout,
+      solution: g.solution || null,
+      tray: g.tray,
+      selected: null,
+      helps: g.helps,
+      history: g.history || [],
+      hint: [],
+      newStars: [],
+      level: g.level || 1,
+      start: Date.now() - (g.elapsed || 0),
+      elapsed: 0,
+      over: false,
+    };
+    hideModals();
+    buildBoard();
+    render();
+    layoutBoard();
+    if (isStuck()) setTimeout(showStuck, 450);
+    return true;
+  }
+
   // ---------- geometria planszy ----------
   function computeNeighbors(tiles) {
     for (const t of tiles) {
@@ -171,7 +242,7 @@
     }
 
     S = {
-      tiles, tileset, diff, layout,
+      tiles, tileset, diff, diffKey: DIFFICULTY[settings.difficulty] ? settings.difficulty : 3, layout,
       solution: order ? order.pairs.map(([a, b]) => [a.id, b.id]) : null,
       tray: Array(SLOTS).fill(null),
       selected: null,
@@ -188,6 +259,7 @@
     buildBoard();
     render();
     layoutBoard();
+    saveGame();
   }
 
   // ---------- ruchy ----------
@@ -282,6 +354,7 @@
 
   function afterMove() {
     render();
+    saveGame();
     const left = S.tiles.filter((t) => t.loc !== 'gone');
     if (left.length === 0) return win('clear');
     // gwiazdki liczą się tylko na stosie – kafelki w schowku są pomijane
@@ -351,6 +424,7 @@
     S.over = false;
     hideModals();
     render();
+    saveGame();
   }
 
   function useShuffle() {
@@ -406,6 +480,7 @@
   function win(kind) {
     S.over = true;
     S.elapsed = Date.now() - S.start;
+    clearSavedGame();
     const title = kind === 'stars' ? '⭐ Gwiezdne zwycięstwo! ⭐' : 'Brawo! Plansza oczyszczona!';
     const msg = kind === 'stars'
       ? 'Wszystkie pozostałe kafelki mają gwiazdki.'
@@ -556,7 +631,7 @@
     const left = S.tiles.filter((t) => t.loc !== 'gone').length;
     $('#statLevel').textContent = S.level;
     $('#statLeft').textContent = left;
-    $('#statDiff').textContent = settings.difficulty;
+    $('#statDiff').textContent = S.diffKey;
     const starStat = $('#statStarsBox');
     starStat.hidden = !settings.stars;
     if (settings.stars) {
@@ -749,5 +824,11 @@
   // uchwyt do testów automatycznych
   window.__mahjong = { get state() { return S; }, settings, newGame, clickTile, clickSlot, findPair, isFree };
 
-  openMenu();
+  // zapisz czas gry, gdy aplikacja schodzi do tła
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && S && !S.over) saveGame();
+  });
+  window.addEventListener('pagehide', () => { if (S && !S.over) saveGame(); });
+
+  if (!restoreGame()) openMenu();
 })();

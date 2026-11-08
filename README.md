@@ -4,6 +4,16 @@ Pasjans Mahjong w przeglądarce: czysty HTML, CSS i JavaScript, bez zależności
 
 **Zagraj:** https://zbludzakowe-zabawy.github.io/MahjongNasz/
 
+## Aplikacja na telefon
+
+Gra jest aplikacją PWA: działa bez internetu i można ją zainstalować na ekranie głównym.
+
+- **Android (Chrome, Edge, Samsung Internet):** po otwarciu strony pojawi się baner **Zainstaluj**. Można też użyć menu przeglądarki → *Zainstaluj aplikację* / *Dodaj do ekranu głównego*.
+- **iPhone / iPad (Safari):** baner podpowiada: **Udostępnij** → **Do ekranu początkowego**.
+- **Komputer (Chrome, Edge):** ikona instalacji na pasku adresu.
+
+Bieżąca partia zapisuje się po każdym ruchu, więc wraca po zamknięciu aplikacji. Po opublikowaniu nowej wersji gra pokazuje komunikat **Dostępna nowa wersja**; po stuknięciu *Odśwież* partia jest zachowana.
+
 ## Uruchomienie
 
 Otwórz `index.html` w przeglądarce. Możesz też podać katalog przez dowolny serwer statyczny, np. `python3 -m http.server`.
@@ -55,3 +65,6 @@ Po wygranej przycisk **Następny poziom** rozdaje nową planszę i daje nowy kom
 - `js/layouts.js` – układy stosów
 - `js/tilesets.js` – zestawy obrazków
 - `js/game.js` – logika gry
+- `js/pwa.js` – instalacja aplikacji i komunikat o nowej wersji
+- `sw.js` – service worker (gra offline); `tools/build-sw.mjs` przy publikacji wpisuje do niego wersję i listę plików
+- `manifest.webmanifest`, `icons/` – dane i ikony aplikacji
