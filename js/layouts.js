@@ -126,7 +126,121 @@ const Layouts = (() => {
         return L; // 56
       },
     },
+    {
+      id: 'house',
+      name: 'Domek',
+      build() {
+        const L = [];
+        R(L, 0, 2, 0, 2, 1);
+        R(L, 0, 1, 1, 4, 1);
+        R(L, 0, 0, 2, 6, 3);
+        R(L, 1, 1, 3, 4, 2);
+        return L; // 32
+      },
+    },
+    {
+      id: 'snake',
+      name: 'Wąż',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 6, 1);
+        T(L, 0, 5, 1);
+        R(L, 0, 0, 2, 6, 1);
+        T(L, 0, 0, 3);
+        R(L, 0, 0, 4, 6, 1);
+        R(L, 1, 1, 0, 4, 1);
+        R(L, 1, 1, 2, 4, 1);
+        R(L, 1, 1, 4, 4, 1);
+        return L; // 32
+      },
+    },
+    {
+      id: 'diamond',
+      name: 'Diament',
+      build() {
+        const L = [];
+        R(L, 0, 2, 0, 2, 1);
+        R(L, 0, 1, 1, 4, 1);
+        R(L, 0, 0, 2, 6, 2);
+        R(L, 0, 1, 4, 4, 1);
+        R(L, 0, 2, 5, 2, 1);
+        R(L, 1, 1, 2, 4, 2);
+        R(L, 1, 2, 1, 2, 1);
+        R(L, 1, 2, 4, 2, 1);
+        R(L, 2, 2, 2, 2, 2);
+        return L; // 40
+      },
+    },
+    {
+      id: 'hourglass',
+      name: 'Klepsydra',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 6, 1);
+        R(L, 0, 1, 1, 4, 1);
+        R(L, 0, 2, 2, 2, 2);
+        R(L, 0, 1, 4, 4, 1);
+        R(L, 0, 0, 5, 6, 1);
+        R(L, 1, 1, 0, 4, 1);
+        R(L, 1, 2, 1, 2, 1);
+        R(L, 1, 2, 4, 2, 1);
+        R(L, 1, 1, 5, 4, 1);
+        R(L, 2, 2, 0, 2, 1);
+        R(L, 2, 2, 5, 2, 1);
+        return L; // 40
+      },
+    },
+    {
+      id: 'bridge',
+      name: 'Most',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 10, 1);
+        R(L, 0, 0, 1, 2, 3);
+        R(L, 0, 8, 1, 2, 3);
+        R(L, 1, 0, 0, 2, 4);
+        R(L, 1, 8, 0, 2, 4);
+        T(L, 2, 0.5, 1.5);
+        T(L, 2, 8.5, 1.5);
+        return L; // 40
+      },
+    },
+    {
+      id: 'minipyramid',
+      name: 'Mała piramida',
+      build() {
+        const L = [];
+        R(L, 0, 0, 0, 5, 4);
+        R(L, 1, 0.5, 0.5, 4, 3);
+        R(L, 2, 1, 1, 3, 2);
+        R(L, 3, 1.5, 1.5, 2, 1);
+        return L; // 40
+      },
+    },
+    {
+      id: 'heart',
+      name: 'Serce',
+      build() {
+        const L = [];
+        R(L, 0, 1, 0, 2, 1);
+        R(L, 0, 5, 0, 2, 1);
+        R(L, 0, 0, 1, 8, 2);
+        R(L, 0, 1, 3, 6, 1);
+        R(L, 0, 2, 4, 4, 1);
+        R(L, 0, 3, 5, 2, 1);
+        R(L, 1, 1, 1, 2, 1);
+        R(L, 1, 5, 1, 2, 1);
+        R(L, 1, 1, 2, 6, 1);
+        R(L, 1, 2, 3, 4, 1);
+        R(L, 1, 3, 4, 2, 1);
+        return L; // 48
+      },
+    },
   ];
+
+  // od najmniejszych do największych
+  list.forEach((l) => (l.count = l.build().length));
+  list.sort((a, b) => a.count - b.count);
 
   return {
     list,

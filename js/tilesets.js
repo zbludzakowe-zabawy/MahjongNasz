@@ -6,9 +6,9 @@ const TileSets = (() => {
   // ---- Klasyczny zestaw (rysowany w SVG) ----
   const DOT_POS = {
     1: [[30, 40]],
-    2: [[30, 22], [30, 58]],
+    2: [[30, 20], [30, 60]],
     3: [[15, 17], [30, 40], [45, 63]],
-    4: [[18, 22], [42, 22], [18, 58], [42, 58]],
+    4: [[17, 20], [43, 20], [17, 60], [43, 60]],
     5: [[17, 18], [43, 18], [30, 40], [17, 62], [43, 62]],
     6: [[19, 17], [41, 17], [19, 40], [41, 40], [19, 63], [41, 63]],
     7: [[14, 11], [30, 20], [46, 29], [19, 49], [41, 49], [19, 68], [41, 68]],
@@ -18,7 +18,7 @@ const TileSets = (() => {
   const DOT_COLORS = ['#1e5aa8', '#c62828', '#2e7d32'];
 
   function dots(n) {
-    const r = n === 1 ? 17 : n <= 4 ? 10 : n <= 6 ? 8.5 : 7.5;
+    const r = n === 1 ? 22 : n <= 4 ? 12 : n <= 6 ? 9.5 : 7.8;
     return wrap(
       DOT_POS[n]
         .map(([cx, cy], i) => {
@@ -41,7 +41,7 @@ const TileSets = (() => {
     9: [[14, 30, 46], [14, 30, 46], [14, 30, 46]],
   };
 
-  function stick(cx, y, h, color, w = 8) {
+  function stick(cx, y, h, color, w = 10) {
     const x = cx - w / 2;
     return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w / 2.5}" fill="${color}"/>` +
       `<rect x="${x - 1}" y="${y + h / 2 - 1.2}" width="${w + 2}" height="2.4" rx="1" fill="#1b4d1f"/>` +
@@ -52,19 +52,19 @@ const TileSets = (() => {
   function bamboo(n) {
     if (n === 1) {
       return wrap(
-        stick(30, 8, 64, '#2e7d32', 16) +
-        `<circle cx="30" cy="16" r="6" fill="#c62828"/>`
+        stick(30, 4, 72, '#2e7d32', 20) +
+        `<circle cx="30" cy="14" r="8" fill="#c62828"/>`
       );
     }
     const rows = BAMBOO_ROWS[n];
-    const gap = 4;
-    const h = (68 - (rows.length - 1) * gap) / rows.length;
+    const gap = 3;
+    const h = (74 - (rows.length - 1) * gap) / rows.length;
     let out = '';
     rows.forEach((row, ri) => {
-      const y = 6 + ri * (h + gap);
+      const y = 3 + ri * (h + gap);
       row.forEach((cx) => {
         const red = (n === 5 && ri === 1) || (n === 7 && ri === 0) || (n === 9 && cx === 30);
-        out += stick(cx, y, h, red ? '#c62828' : '#2e7d32', n === 8 ? 7 : 8);
+        out += stick(cx, y, h, red ? '#c62828' : '#2e7d32', n === 8 ? 8 : 10);
       });
     });
     return wrap(out);
@@ -75,13 +75,13 @@ const TileSets = (() => {
     `<text x="30" y="${y}" text-anchor="middle" font-size="${size}" font-weight="700" fill="${color}" font-family="'Noto Serif CJK SC','Noto Sans CJK SC','MS Mincho','SimSun','Songti SC',serif">${ch}</text>`;
 
   function character(n) {
-    return wrap(cjk(NUMERALS[n - 1], '#1a1a1a', 30, 34) + cjk('萬', '#c62828', 30, 72));
+    return wrap(cjk(NUMERALS[n - 1], '#1a1a1a', 36, 35) + cjk('萬', '#c62828', 36, 76));
   }
 
   function bigChar(ch, color, small) {
     return wrap(
-      cjk(ch, color, 42, 55) +
-      (small ? `<text x="52" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="${color}">${small}</text>` : '')
+      cjk(ch, color, 54, 59) +
+      (small ? `<text x="55" y="10" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${small}</text>` : '')
     );
   }
 
@@ -93,8 +93,8 @@ const TileSets = (() => {
   classicFaces.push(() => bigChar('中', '#c62828'));
   classicFaces.push(() => bigChar('發', '#2e7d32'));
   classicFaces.push(() =>
-    wrap(`<rect x="12" y="14" width="36" height="52" rx="4" fill="none" stroke="#1e5aa8" stroke-width="5"/>` +
-      `<rect x="20" y="22" width="20" height="36" rx="2" fill="none" stroke="#1e5aa8" stroke-width="2"/>`)
+    wrap(`<rect x="7" y="8" width="46" height="64" rx="5" fill="none" stroke="#1e5aa8" stroke-width="6"/>` +
+      `<rect x="16" y="18" width="28" height="44" rx="3" fill="none" stroke="#1e5aa8" stroke-width="2.5"/>`)
   );
   ['梅', '蘭', '菊', '竹'].forEach((c, i) => classicFaces.push(() => bigChar(c, '#7b1fa2', i + 1)));
   ['春', '夏', '秋', '冬'].forEach((c, i) => classicFaces.push(() => bigChar(c, '#e65100', i + 1)));
