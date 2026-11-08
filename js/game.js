@@ -6,6 +6,9 @@
   const HELPS_PER_LEVEL = 2;
   const INITIAL_STARS = 4;
   const HIDDEN_COUNT = { none: 0, few: 6, many: 14 };
+  // Zakryty kafelek odwraca się po kliknięciu (gdy jest wolny). Jeśli nie trafi
+  // do pary, wraca rewersem do góry – po tylu odwróceniach zostaje odkryty na stałe.
+  const FLIPS_TO_STAY = 4;
   // Tryb „zmienny”: z każdym poziomem przybywa zakrytych kafelków (2, 4, 6…)
   const VARIABLE_HIDDEN_STEP = 2;
   const VARIABLE_HIDDEN_MAX = 30;
@@ -64,6 +67,7 @@
   let hintTimer = null;
   let geo = null; // wymiary kafelków z ostatniego layoutBoard()
   let mixToken = 0; // trwająca animacja miksowania (0 – brak)
+  let flipLock = false; // odwrócony kafelek za chwilę zniknie w parze
 
   // ---------- narzędzia ----------
   function shuffle(a) {
@@ -130,7 +134,7 @@
         layout: S.layout.id,
         tileset: S.tileset.id,
         difficulty: S.diffKey,
-        tiles: S.tiles.map((t) => [t.x, t.y, t.z, t.face, t.star ? 1 : 0, t.faceDown ? 1 : 0, t.loc, t.slot]),
+        tiles: S.tiles.map((t) => [t.x, t.y, t.z, t.face, t.star ? 1 : 0, t.faceDown ? 1 : 0, t.loc, t.slot, t.flips]),
         tray: S.tray,
         helps: S.helps,
         // cofnąć można najwyżej tyle ruchów, ile zostało cofnięć
@@ -162,8 +166,8 @@
     const tileset = TileSets.list.find((t) => t.id === g.tileset);
     const diff = DIFFICULTY[g.difficulty];
     if (!layout || !tileset || !diff) return false;
-    const tiles = g.tiles.map(([x, y, z, face, star, faceDown, loc, slot], id) => ({
-      id, x, y, z, face, star: !!star, faceDown: !!faceDown, loc, slot,
+    const tiles = g.tiles.map(([x, y, z, face, star, faceDown, loc, slot, flips], id) => ({
+      id, x, y, z, face, star: !!star, faceDown: !!faceDown, loc, slot, flips: flips || 0,
     }));
     computeNeighbors(tiles);
     S = {
@@ -218,9 +222,9 @@
   }
 
   const onBoard = (id) => S.tiles[id].loc === 'board';
-  const isCovered = (t) => t.above.some(onBoard);
   const isFree = (t) => t.loc === 'board' && freeWith(t, onBoard);
-  const isRevealed = (t) => !t.faceDown || !isCovered(t);
+  // zakryty kafelek widać tylko wtedy, gdy jest właśnie odwrócony (zaznaczony)
+  const isRevealed = (t) => !t.faceDown || t.loc !== 'board' || S.selected === t.id;
 
   // Buduje kolejność zdejmowania par, która gwarantuje rozwiązanie
   // (zdejmujemy pary aktualnie wolnych kafelków aż do opróżnienia).
@@ -257,6 +261,7 @@
   function newGame(level, variant) {
     clearStarShow();
     stopMix();
+    flipLock = false;
     const v = variant || {
       layout: settings.layout,
       tileset: settings.tileset,
@@ -284,7 +289,7 @@
     const minY = Math.min(...pos.map((p) => p.y));
     const tiles = pos.map((p, i) => ({
       id: i, x: p.x - minX, y: p.y - minY, z: p.z,
-      face: -1, star: false, faceDown: false, loc: 'board', slot: -1,
+      face: -1, star: false, faceDown: false, flips: 0, loc: 'board', slot: -1,
     }));
     computeNeighbors(tiles);
 
@@ -342,7 +347,7 @@
   // ---------- ruchy ----------
   function snapshot() {
     S.history.push({
-      tiles: S.tiles.map((t) => [t.loc, t.slot, t.star, t.face]),
+      tiles: S.tiles.map((t) => [t.loc, t.slot, t.star, t.face, t.faceDown, t.flips]),
       tray: S.tray.slice(),
       starLen: S.starPath.length,
     });
@@ -350,12 +355,36 @@
   }
 
   function clickTile(t) {
-    if (!S || S.over || mixToken) return;
+    if (!S || S.over || mixToken || flipLock) return;
     if (t.loc === 'board' && !isFree(t)) {
       nudge(t);
       return;
     }
     clearHint();
+    // zakryty kafelek: odwróć go i zaznacz; pasujący zaznaczony kafelek lub kafelek
+    // ze schowka od razu tworzy z nim parę (po chwili, żeby było widać obrazek)
+    if (t.loc === 'board' && t.faceDown && S.selected !== t.id) {
+      t.flips = (t.flips || 0) + 1;
+      if (t.flips >= FLIPS_TO_STAY) t.faceDown = false;
+      const sel = S.selected !== null ? S.tiles[S.selected] : null;
+      const twin = sel && sel.face === t.face ? sel : trayTwin(t);
+      S.selected = t.id;
+      if (twin) {
+        S.hint = [twin.id, t.id];
+        flipLock = true;
+        render();
+        const game = S;
+        setTimeout(() => {
+          if (S !== game) return;
+          flipLock = false;
+          if (t.loc === 'board' && twin.loc !== 'gone') removePair(twin, t);
+        }, 450);
+        return;
+      }
+      render();
+      saveGame();
+      return;
+    }
     // kafelek ze stosu, do którego pasuje kafelek ze schowka – para od jednego kliknięcia
     if (t.loc === 'board' && S.selected !== t.id) {
       const sel = S.selected !== null ? S.tiles[S.selected] : null;
@@ -388,7 +417,7 @@
   }
 
   function clickSlot(i) {
-    if (!S || S.over || mixToken || S.tray[i] !== null || S.selected === null) return;
+    if (!S || S.over || mixToken || flipLock || S.tray[i] !== null || S.selected === null) return;
     const t = S.tiles[S.selected];
     if (t.loc === 'board') moveToTray(t, i);
   }
@@ -443,7 +472,6 @@
       const chosen = visible.concat(hidden).slice(0, want);
       chosen.forEach((t) => (t.star = true));
       S.newStars = chosen.map((t) => t.id);
-      if (chosen.length) toast(`+${chosen.length} ⭐ na stosie`);
     }
     afterMove();
   }
@@ -480,7 +508,7 @@
 
   // ---------- pomoce ----------
   function useHint() {
-    if (!S || S.over || mixToken) return;
+    if (!S || S.over || mixToken || flipLock) return;
     if (S.helps.hint <= 0) return toast('Lupa już wykorzystana');
     const pair = findPair();
     if (!pair) {
@@ -505,13 +533,14 @@
   }
 
   function useUndo() {
-    if (!S || mixToken) return;
+    if (!S || mixToken || flipLock) return;
     if (S.helps.undo <= 0) return toast('Cofanie już wykorzystane');
     const h = S.history.pop();
     if (!h) return toast('Nie ma czego cofnąć');
     S.helps.undo--;
-    h.tiles.forEach(([loc, slot, star, face], i) => {
+    h.tiles.forEach(([loc, slot, star, face, faceDown, flips], i) => {
       Object.assign(S.tiles[i], { loc, slot, star, face });
+      if (typeof faceDown === 'boolean') Object.assign(S.tiles[i], { faceDown, flips });
     });
     S.tray = h.tray;
     if (typeof h.starLen === 'number') S.starPath.length = Math.min(S.starPath.length, h.starLen);
@@ -526,7 +555,7 @@
   }
 
   function useShuffle() {
-    if (!S || mixToken) return;
+    if (!S || mixToken || flipLock) return;
     if (S.helps.shuffle <= 0) return toast('Miksowanie już wykorzystane');
     const board = S.tiles.filter((t) => t.loc === 'board');
     if (board.length < 2) return toast('Za mało kafelków do miksowania');
@@ -1120,7 +1149,7 @@
       c.toggle('hint', S.hint.includes(t.id));
       c.toggle('starred', t.star);
       c.toggle('newstar', S.newStars.includes(t.id));
-      c.toggle('glow', !!(S.diff.glow && sel && free && t.id !== sel.id && t.face === sel.face));
+      c.toggle('glow', !!(S.diff.glow && sel && free && isRevealed(t) && t.id !== sel.id && t.face === sel.face));
     });
     renderTray(sel);
     renderHud();

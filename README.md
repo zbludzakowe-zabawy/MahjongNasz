@@ -35,7 +35,7 @@ Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dw
   - większe (domyślnie na komputer): Most (40), Kwiat (76), Forteca (84), Krzyż (86), Schody (112), Piramida (120), Żółw (144);
   - albo Losowy (na telefonie losowany spośród układów na telefon).
 - **Obrazki na kafelkach** (domyślnie Muzyka): Klasyczny (kropki, bambusy, znaki, wiatry, smoki, kwiaty i pory roku), Owoce i warzywa, Zwierzęta, Natura, Sport i zabawa, Pojazdy, Słodycze, Muzyka (nuty i instrumenty), Minecraft (pikselowe kostki i przedmioty), Kotki (6 umaszczeń z różnymi dodatkami).
-- **Kafelki rewersem do góry:** brak, kilka (6) albo kilkanaście (14). Zakryty kafelek odwraca się dopiero wtedy, gdy nic na nim nie leży.
+- **Kafelki rewersem do góry:** brak, kilka (6) albo kilkanaście (14). Zakryty kafelek odwracasz kliknięciem, gdy jest wolny. Jeśli nie trafi do pary (zaznaczysz inny kafelek albo odznaczysz ten), znów odwraca się rewersem do góry. Po 4 odwróceniach zostaje odkryty na stałe.
 - **Gwiazdki:** na starcie 4 kafelki mają gwiazdkę. Zebranie pary z 1 gwiazdką daje gwiazdki 2 kafelkom na stosie, a pary z 2 gwiazdkami – 4 kafelkom. Wygrywasz po oczyszczeniu planszy **albo** gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki w schowku się nie liczą. Gwiezdne zwycięstwo kończy animacja: świetlista ścieżka przez miejsca, gdzie zebrano gwiazdki, z gwiazdką innego koloru i kształtu dla każdego piętra stosu, oraz deszcz migoczących gwiazdek. Zwycięstwo przez oczyszczenie planszy kończy wystrzał konfetti.
 - **Poziom trudności 1–5** działa niezależnie od pozostałych opcji:
 
