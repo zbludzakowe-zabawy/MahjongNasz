@@ -25,17 +25,18 @@ Każdy push do `main` publikuje grę na GitHub Pages (workflow `.github/workflow
 Zbieraj pary takich samych kafelków. Kafelek jest wolny, gdy nic na nim nie leży i ma wolny lewy **lub** prawy bok.
 
 ### Schowek (4 miejsca)
-Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dwukrotnie). Kafelki ze schowka można łączyć w pary z kafelkami z planszy. Gdy do schowka trafią dwa takie same kafelki, od razu tworzą parę i znikają.
+Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dwukrotnie). Kafelki ze schowka można łączyć w pary z kafelkami z planszy – wystarczy jedno kliknięcie w pasujący kafelek na stosie. Gdy do schowka trafią dwa takie same kafelki, od razu tworzą parę i znikają.
 
 ### Opcje gry
-- **Urządzenie:** 📱 Telefon albo 🖥️ Komputer (wykrywane automatycznie przy pierwszym uruchomieniu). Na telefonie domyślnie widać tylko układy mieszczące się w 8×9 kafelkach; większe można odsłonić przyciskiem **Więcej układów** i też w nie zagrać. Na komputerze dostępne są wszystkie układy.
+- **Urządzenie:** 📱 Telefon albo 🖥️ Komputer (wykrywane automatycznie przy pierwszym uruchomieniu). Na telefonie dostępne są układy mieszczące się w 8×9 kafelkach (większe też można odsłonić przyciskiem **Więcej układów** i w nie zagrać). Na komputerze dostępne są wszystkie układy.
+- **Porządek w menu:** od razu widać 7 najczęściej wybieranych układów (plus Losowy) i 5 ulubionych zestawów obrazków; pozostałe są pod przyciskami **Więcej układów** / **Więcej obrazków**. Zanim gracz zacznie wybierać, widoczne są domyślne propozycje – dla obrazków: Muzyka, Klasyczny, Kotki, Minecraft, Natura.
 - **Układ stosu:**
   - na telefon (do 8×9): Domek (32), Wąż (32), Diament (40), Klepsydra (40), Mała piramida (40), Serce (48), Mały kwadrat (56), Choinka (58), Motyl (88), Zamek (88), Wieża (94), Puchar (98), Żółwik (106), Piramida (120);
   - większe (domyślnie na komputer): Most (40), Kwiat (76), Forteca (84), Krzyż (86), Schody (112), Żółw (144);
   - albo Losowy (na telefonie losowany spośród układów na telefon).
-- **Obrazki na kafelkach:** Klasyczny (kropki, bambusy, znaki, wiatry, smoki, kwiaty i pory roku), Owoce i warzywa, Zwierzęta, Natura, Sport i zabawa, Pojazdy, Słodycze, Muzyka (nuty i instrumenty), Minecraft (pikselowe kostki i przedmioty), Kotki (6 umaszczeń z różnymi dodatkami).
+- **Obrazki na kafelkach** (domyślnie Muzyka): Klasyczny (kropki, bambusy, znaki, wiatry, smoki, kwiaty i pory roku), Owoce i warzywa, Zwierzęta, Natura, Sport i zabawa, Pojazdy, Słodycze, Muzyka (nuty i instrumenty), Minecraft (pikselowe kostki i przedmioty), Kotki (6 umaszczeń z różnymi dodatkami).
 - **Kafelki rewersem do góry:** brak, kilka (6) albo kilkanaście (14). Zakryty kafelek odwraca się dopiero wtedy, gdy nic na nim nie leży.
-- **Gwiazdki:** na starcie 4 kafelki mają gwiazdkę. Zebranie pary z 1 gwiazdką daje gwiazdki 2 kafelkom na stosie, a pary z 2 gwiazdkami – 4 kafelkom. Wygrywasz po oczyszczeniu planszy **albo** gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki w schowku się nie liczą.
+- **Gwiazdki:** na starcie 4 kafelki mają gwiazdkę. Zebranie pary z 1 gwiazdką daje gwiazdki 2 kafelkom na stosie, a pary z 2 gwiazdkami – 4 kafelkom. Wygrywasz po oczyszczeniu planszy **albo** gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki w schowku się nie liczą. Gwiezdne zwycięstwo kończy animacja: świetlista ścieżka przez miejsca, gdzie zebrano gwiazdki, z gwiazdką innego koloru i kształtu dla każdego piętra stosu, oraz deszcz migoczących gwiazdek.
 - **Poziom trudności 1–5** działa niezależnie od pozostałych opcji:
 
   | Poziom | Powtórzeń obrazka | Podświetlanie pasujących |

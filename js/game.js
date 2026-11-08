@@ -22,6 +22,11 @@
 
   // Domyślny układ dla każdego rodzaju urządzenia
   const DEVICE_LAYOUT = { phone: 'castle', desktop: 'turtle' };
+  // Propozycje układów w menu, zanim gracz zacznie wybierać własne
+  const DEFAULT_LAYOUTS = {
+    phone: ['castle', 'house', 'heart', 'tree', 'butterfly', 'cup', 'littleturtle'],
+    desktop: ['turtle', 'pyramid', 'fortress', 'castle', 'butterfly', 'flower', 'heart'],
+  };
 
   function detectDevice() {
     try {
@@ -33,15 +38,27 @@
     }
   }
 
-  const DEFAULTS = { layout: null, tileset: 'classic', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null };
+  // W menu widać tylko kilka najczęściej wybieranych układów i zestawów obrazków,
+  // reszta czeka pod przyciskiem „Więcej…”. Dopóki gracz nic nie wybierał,
+  // pokazujemy domyślne propozycje w tej kolejności.
+  const FAV_LAYOUTS = 7;
+  const FAV_TILESETS = 5;
+  const DEFAULT_TILESETS = ['music', 'classic', 'cats', 'minecraft', 'nature'];
+
+  const DEFAULTS = {
+    v: 2, layout: null, tileset: 'music', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null,
+    layoutUse: {}, tilesetUse: {},
+  };
   const settings = loadSettings();
   if (!settings.device) settings.device = detectDevice();
   if (!settings.layout) settings.layout = DEVICE_LAYOUT[settings.device];
-  let showAllLayouts = false; // w trybie telefonu: pokaż też układy komputerowe
+  let showAllLayouts = false; // pokaż też rzadziej wybierane układy
+  let showAllTilesets = false; // pokaż też rzadziej wybierane obrazki
 
   let S = null; // stan bieżącej gry
   let tileEls = [];
   let hintTimer = null;
+  let geo = null; // wymiary kafelków z ostatniego layoutBoard()
 
   // ---------- narzędzia ----------
   function shuffle(a) {
@@ -56,11 +73,35 @@
   function loadSettings() {
     try {
       const s = JSON.parse(localStorage.getItem('mahjongnasz-settings') || '{}');
-      return { ...DEFAULTS, ...s };
+      // wersja 1 zapisywała domyślny „Klasyczny” – od wersji 2 domyślna jest „Muzyka”
+      if (!s.v && s.tileset === 'classic') delete s.tileset;
+      return { ...DEFAULTS, ...s, v: DEFAULTS.v };
     } catch (e) {
       return { ...DEFAULTS };
     }
   }
+  function countUse(key, id) {
+    if (id === 'random') return;
+    const m = settings[key] && typeof settings[key] === 'object' ? settings[key] : (settings[key] = {});
+    m[id] = (m[id] || 0) + 1;
+    saveSettings();
+  }
+
+  // Wybiera n ulubionych spośród `items` (najczęściej wybierane, potem kolejność
+  // z `preferred`, potem kolejność listy). Bieżący wybór zawsze jest wśród nich.
+  // Zwraca je w kolejności listy, żeby przyciski nie przeskakiwały.
+  function favorites(items, use, preferred, n, current) {
+    const rank = (it) => {
+      const p = preferred.indexOf(it.id);
+      return p < 0 ? preferred.length + items.indexOf(it) : p;
+    };
+    const sorted = items.slice().sort((a, b) => ((use[b.id] || 0) - (use[a.id] || 0)) || (rank(a) - rank(b)));
+    let fav = sorted.slice(0, n);
+    const cur = items.find((it) => it.id === current);
+    if (cur && !fav.includes(cur)) fav = fav.slice(0, n - 1).concat(cur);
+    return items.filter((it) => fav.includes(it));
+  }
+
   function saveSettings() {
     try {
       localStorage.setItem('mahjongnasz-settings', JSON.stringify(settings));
@@ -90,6 +131,7 @@
         // cofnąć można najwyżej tyle ruchów, ile zostało cofnięć
         history: S.helps.undo > 0 ? S.history.slice(-S.helps.undo) : [],
         solution: S.solution,
+        starPath: S.starPath,
         level: S.level,
         elapsed: S.over ? S.elapsed : Date.now() - S.start,
       }));
@@ -125,6 +167,7 @@
       history: g.history || [],
       hint: [],
       newStars: [],
+      starPath: Array.isArray(g.starPath) ? g.starPath : [],
       level: g.level || 1,
       start: Date.now() - (g.elapsed || 0),
       elapsed: 0,
@@ -197,6 +240,9 @@
 
   // ---------- nowa gra ----------
   function newGame(level) {
+    clearStarShow();
+    countUse('layoutUse', settings.layout);
+    countUse('tilesetUse', settings.tileset);
     const layout = Layouts.get(settings.layout, settings.device);
     const tileset = TileSets.get(settings.tileset);
     const diff = DIFFICULTY[settings.difficulty] || DIFFICULTY[3];
@@ -250,6 +296,7 @@
       history: [],
       hint: [],
       newStars: [],
+      starPath: [],
       level,
       start: Date.now(),
       elapsed: 0,
@@ -267,6 +314,7 @@
     S.history.push({
       tiles: S.tiles.map((t) => [t.loc, t.slot, t.star, t.face]),
       tray: S.tray.slice(),
+      starLen: S.starPath.length,
     });
     if (S.history.length > 300) S.history.shift();
   }
@@ -278,6 +326,15 @@
       return;
     }
     clearHint();
+    // kafelek ze stosu, do którego pasuje kafelek ze schowka – para od jednego kliknięcia
+    if (t.loc === 'board' && S.selected !== t.id) {
+      const sel = S.selected !== null ? S.tiles[S.selected] : null;
+      const twin = sel && sel.face === t.face ? sel : trayTwin(t);
+      if (twin) {
+        removePair(twin, t);
+        return;
+      }
+    }
     if (S.selected === null) {
       S.selected = t.id;
     } else if (S.selected === t.id) {
@@ -291,6 +348,13 @@
       S.selected = t.id;
     }
     render();
+  }
+
+  function trayTwin(t) {
+    for (const id of S.tray) {
+      if (id !== null && id !== t.id && S.tiles[id].face === t.face) return S.tiles[id];
+    }
+    return null;
   }
 
   function clickSlot(i) {
@@ -339,6 +403,8 @@
     S.newStars = [];
 
     const starsTaken = (a.star ? 1 : 0) + (b.star ? 1 : 0);
+    // zapamiętaj, gdzie na stosie znaleziono gwiazdki – do animacji zwycięstwa
+    for (const t of [a, b]) if (t.star) S.starPath.push(t.id);
     if (settings.stars && starsTaken > 0) {
       const want = starsTaken * 2; // 1 gwiazdka -> 2 nowe, 2 gwiazdki -> 4 nowe
       const cand = S.tiles.filter((t) => t.loc === 'board' && !t.star);
@@ -418,6 +484,8 @@
       Object.assign(S.tiles[i], { loc, slot, star, face });
     });
     S.tray = h.tray;
+    if (typeof h.starLen === 'number') S.starPath.length = Math.min(S.starPath.length, h.starLen);
+    clearStarShow();
     S.selected = null;
     S.hint = [];
     S.newStars = [];
@@ -481,13 +549,22 @@
     S.over = true;
     S.elapsed = Date.now() - S.start;
     clearSavedGame();
+    if (kind === 'stars') {
+      playStarShow(() => showWinModal(kind));
+      return;
+    }
+    showWinModal(kind);
+  }
+
+  function showWinModal(kind) {
+    if (!S || !S.over) return;
     const title = kind === 'stars' ? '⭐ Gwiezdne zwycięstwo! ⭐' : 'Brawo! Plansza oczyszczona!';
     const msg = kind === 'stars'
       ? 'Wszystkie pozostałe kafelki mają gwiazdki.'
       : 'Zebrano wszystkie kafelki.';
     showModal('#endModal', {
       title,
-      body: `<p>${msg}</p><p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`,
+      body: `<p>${msg}</p>${kind === 'stars' ? starLegend() : ''}<p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`,
       buttons: [
         { label: 'Następny poziom ▶', primary: true, action: () => newGame(S.level + 1) },
         { label: 'Ustawienia', action: openMenu },
@@ -515,6 +592,205 @@
         : '<p>Nie ma już par do zebrania, a pomoce się skończyły.</p>',
       buttons,
     });
+  }
+
+  // ---------- animacja gwiezdnego zwycięstwa ----------
+  // Każde piętro stosu ma własną gwiazdkę: inny kolor i liczbę ramion.
+  const STAR_LEVELS = [
+    { name: 'parter', points: 5, fill: '#ffd23f', glow: '#ffb000' },
+    { name: '1. piętro', points: 6, fill: '#bfe6ff', glow: '#4fb3ff' },
+    { name: '2. piętro', points: 7, fill: '#ffb3e1', glow: '#ff4fb5' },
+    { name: '3. piętro', points: 8, fill: '#c9b3ff', glow: '#8a5cff' },
+    { name: '4. piętro i wyżej', points: 4, fill: '#ffffff', glow: '#7ff7e8' },
+  ];
+  const starLevel = (z) => STAR_LEVELS[Math.min(z, STAR_LEVELS.length - 1)];
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  function starPoints(cx, cy, r, n) {
+    const pts = [];
+    const inner = n === 4 ? 0.32 : 0.45;
+    for (let i = 0; i < n * 2; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / n;
+      const rr = i % 2 ? r * inner : r;
+      pts.push(`${(cx + rr * Math.cos(a)).toFixed(1)},${(cy + rr * Math.sin(a)).toFixed(1)}`);
+    }
+    return pts.join(' ');
+  }
+
+  function miniStarSvg(z, size = 22) {
+    const L = starLevel(z);
+    return `<svg class="legend-star" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">`
+      + `<polygon points="${starPoints(12, 12, 11, L.points)}" fill="${L.fill}" stroke="${L.glow}" stroke-width="1.2"/></svg>`;
+  }
+
+  function starLegend() {
+    const counts = new Map();
+    S.starPath.forEach((id) => {
+      const lv = Math.min(S.tiles[id].z, STAR_LEVELS.length - 1);
+      counts.set(lv, (counts.get(lv) || 0) + 1);
+    });
+    if (!counts.size) return '';
+    const items = [...counts.keys()].sort((a, b) => a - b)
+      .map((lv) => `<span class="legend-item">${miniStarSvg(lv)}${STAR_LEVELS[lv].name} × ${counts.get(lv)}</span>`);
+    return `<p class="star-legend">Zebrane gwiazdki: ${items.join('')}</p>`;
+  }
+
+  function tileCenter(t) {
+    return {
+      x: (t.x / 2) * geo.tw + (geo.maxZ - t.z) * geo.d + geo.tw / 2,
+      y: (t.y / 2) * geo.th + (geo.maxZ - t.z) * geo.d + geo.th / 2,
+    };
+  }
+
+  // gładka krzywa przez punkty (Catmull-Rom → Bézier)
+  function smoothPath(p) {
+    if (p.length === 1) return `M${p[0].x},${p[0].y}`;
+    let d = `M${p[0].x.toFixed(1)},${p[0].y.toFixed(1)}`;
+    for (let i = 0; i < p.length - 1; i++) {
+      const p0 = p[i - 1] || p[i];
+      const p1 = p[i];
+      const p2 = p[i + 1];
+      const p3 = p[i + 2] || p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6;
+      const c1y = p1.y + (p2.y - p0.y) / 6;
+      const c2x = p2.x - (p3.x - p1.x) / 6;
+      const c2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVGNS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  function clearStarShow() {
+    document.querySelectorAll('.star-show, .star-rain').forEach((el) => el.remove());
+    document.removeEventListener('pointerdown', skipStarShow, true);
+    clearTimeout(starShowTimer);
+    starShowDone = null;
+  }
+
+  let starShowTimer = null;
+  let starShowDone = null;
+  function skipStarShow(e) {
+    if (!starShowDone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    finishStarShow();
+  }
+  function finishStarShow() {
+    const done = starShowDone;
+    starShowDone = null;
+    clearTimeout(starShowTimer);
+    document.removeEventListener('pointerdown', skipStarShow, true);
+    const show = document.querySelector('.star-show');
+    if (show) show.classList.add('finished');
+    if (done) done();
+  }
+
+  function playStarShow(done) {
+    clearStarShow();
+    if (!geo) return done();
+    S.selected = null;
+    render();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const found = S.starPath.map((id) => S.tiles[id]);
+    const remaining = S.tiles.filter((t) => t.loc === 'board' && t.star);
+    const pts = found.map(tileCenter);
+    const rBase = Math.max(9, geo.tw * 0.36);
+    const r = rBase;
+
+    const svg = svgEl('svg', {
+      class: 'star-show',
+      width: boardEl.style.width.replace('px', ''),
+      height: boardEl.style.height.replace('px', ''),
+      'aria-hidden': 'true',
+    });
+    const defs = svgEl('defs', {});
+    defs.innerHTML = `
+      <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff6c2"/><stop offset=".5" stop-color="#ffcf3f"/><stop offset="1" stop-color="#ff7ad1"/>
+      </linearGradient>
+      <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="${(r / 5).toFixed(1)}" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>`;
+    svg.appendChild(defs);
+
+    // długości odcinków – gwiazdka zapala się, gdy dotrze do niej ścieżka
+    const segLen = [0];
+    for (let i = 1; i < pts.length; i++) {
+      segLen.push(segLen[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    }
+    const total = segLen[segLen.length - 1] || 1;
+    const drawMs = reduce ? 0 : Math.max(1400, Math.min(4200, pts.length * 320));
+
+    if (pts.length > 1) {
+      const d = smoothPath(pts);
+      const glow = svgEl('path', { d, class: 'trail-glow', 'stroke-width': (r * 0.55).toFixed(1) });
+      const line = svgEl('path', { d, class: 'trail', 'stroke-width': (r * 0.18).toFixed(1) });
+      svg.append(glow, line);
+      for (const p of [glow, line]) {
+        const len = p.getTotalLength ? p.getTotalLength() : total;
+        p.style.strokeDasharray = `${len}`;
+        p.style.strokeDashoffset = `${len}`;
+        p.style.animationDuration = `${drawMs}ms`;
+      }
+    }
+
+    const addStar = (t, p, delay, cls, scale = 1) => {
+      const L = starLevel(t.z);
+      const r = rBase * scale;
+      const g = svgEl('g', { class: `show-star ${cls}`, style: `--delay:${delay}ms;transform-origin:${p.x}px ${p.y}px` });
+      g.appendChild(svgEl('polygon', {
+        points: starPoints(p.x, p.y, r, L.points), fill: L.fill, stroke: L.glow,
+        'stroke-width': (r * 0.12).toFixed(1), filter: 'url(#starGlow)',
+      }));
+      // drobne iskierki wokół gwiazdki
+      for (let k = 0; k < 3; k++) {
+        const a = Math.random() * Math.PI * 2;
+        const dist = r * (1.1 + Math.random() * 0.6);
+        const sx = p.x + Math.cos(a) * dist;
+        const sy = p.y + Math.sin(a) * dist;
+        g.appendChild(svgEl('polygon', {
+          class: 'spark', points: starPoints(sx, sy, r * 0.32, 4), fill: '#fff',
+          style: `--sd:${Math.round(delay + 200 + Math.random() * 900)}ms;transform-origin:${sx}px ${sy}px`,
+        }));
+      }
+      svg.appendChild(g);
+    };
+    found.forEach((t, i) => addStar(t, pts[i], Math.round((segLen[i] / total) * drawMs), 'found'));
+    const endDelay = drawMs + 150;
+    remaining.forEach((t, i) => addStar(t, tileCenter(t), endDelay + i * 40, 'final', 0.55));
+
+    boardEl.appendChild(svg);
+    if (!reduce) starRain(endDelay);
+
+    starShowDone = done;
+    document.addEventListener('pointerdown', skipStarShow, true);
+    starShowTimer = setTimeout(finishStarShow, reduce ? 600 : endDelay + 1800);
+  }
+
+  // deszcz migoczących gwiazdek na całym ekranie
+  function starRain(delay) {
+    const box = document.createElement('div');
+    box.className = 'star-rain';
+    box.setAttribute('aria-hidden', 'true');
+    const n = 36;
+    let html = '';
+    for (let i = 0; i < n; i++) {
+      const lv = STAR_LEVELS[i % STAR_LEVELS.length];
+      const size = 10 + Math.random() * 18;
+      html += `<span style="left:${(Math.random() * 100).toFixed(1)}%;--fall:${(2.2 + Math.random() * 2).toFixed(2)}s;`
+        + `--rd:${Math.round(delay + Math.random() * 1600)}ms;width:${size.toFixed(0)}px;height:${size.toFixed(0)}px">`
+        + `<svg viewBox="0 0 24 24"><polygon points="${starPoints(12, 12, 11, lv.points)}" fill="${lv.fill}" stroke="${lv.glow}" stroke-width="1"/></svg></span>`;
+    }
+    box.innerHTML = html;
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), delay + 6000);
   }
 
   // ---------- rysowanie ----------
@@ -566,6 +842,7 @@
     ));
     const th = tw * ratio;
     const d = tw * depthK;
+    geo = { tw, th, d, maxZ };
     const w = cols * tw + (maxZ + 1) * d;
     const h = rows * th + (maxZ + 1) * d;
     boardEl.style.width = `${w}px`;
@@ -695,24 +972,57 @@
     return { v: l.id, label: l.name, sub: `${l.count} kafelków · ${l.cols}×${l.rows}` };
   }
 
+  function moreButton(shown, toggle, moreLabel, sub) {
+    return {
+      action: () => { toggle(); buildMenu(); },
+      label: shown ? 'Mniej ▴' : `${moreLabel} ▾`,
+      sub: shown ? 'tylko ulubione' : sub,
+    };
+  }
+
   function layoutOptions() {
     const phone = settings.device === 'phone';
-    const opts = Layouts.forDevice(settings.device).map(layoutOpt);
+    const pool = Layouts.forDevice(settings.device);
+    const fav = favorites(pool, settings.layoutUse || {}, DEFAULT_LAYOUTS[settings.device], FAV_LAYOUTS, settings.layout);
+    const opts = fav.map(layoutOpt);
     opts.push({ v: 'random', label: 'Losowy', sub: phone ? 'z układów na telefon' : 'za każdym razem inny' });
-    if (phone) {
-      const big = Layouts.list.filter((l) => !l.phone);
-      const chosenBig = big.some((l) => l.id === settings.layout);
-      if (showAllLayouts || chosenBig) {
+    const rest = pool.filter((l) => !fav.includes(l));
+    const big = phone ? Layouts.list.filter((l) => !l.phone) : [];
+    if (showAllLayouts) {
+      if (rest.length) {
+        opts.push({ sep: 'Pozostałe układy' });
+        opts.push(...rest.map(layoutOpt));
+      }
+      if (big.length) {
         opts.push({ sep: 'Większe układy (domyślnie na komputer)' });
         opts.push(...big.map(layoutOpt));
       }
-      if (!chosenBig) {
-        opts.push({
-          action: () => { showAllLayouts = !showAllLayouts; buildMenu(); },
-          label: showAllLayouts ? 'Mniej ▴' : 'Więcej układów ▾',
-          sub: showAllLayouts ? 'tylko na telefon' : `+${big.length} większych`,
-        });
-      }
+    }
+    const more = rest.length + big.length;
+    if (more) {
+      opts.push(moreButton(showAllLayouts, () => (showAllLayouts = !showAllLayouts), 'Więcej układów', `+${more}`));
+    }
+    return opts;
+  }
+
+  function tilesetOpt(s) {
+    return {
+      v: s.id, label: s.name,
+      html: `<span class="mini-tiles">${s.preview.map((i) => `<span class="mini">${s.render(i)}</span>`).join('')}</span>`,
+    };
+  }
+
+  function tilesetOptions() {
+    const all = TileSets.list;
+    const fav = favorites(all, settings.tilesetUse || {}, DEFAULT_TILESETS, FAV_TILESETS, settings.tileset);
+    const opts = fav.map(tilesetOpt);
+    const rest = all.filter((s) => !fav.includes(s));
+    if (showAllTilesets && rest.length) {
+      opts.push({ sep: 'Pozostałe obrazki' });
+      opts.push(...rest.map(tilesetOpt));
+    }
+    if (rest.length) {
+      opts.push(moreButton(showAllTilesets, () => (showAllTilesets = !showAllTilesets), 'Więcej obrazków', `+${rest.length}`));
     }
     return opts;
   }
@@ -725,10 +1035,7 @@
         { v: 'desktop', label: '🖥️ Komputer', sub: 'wszystkie układy' },
       ],
       layout: layoutOptions(),
-      tileset: TileSets.list.map((s) => ({
-        v: s.id, label: s.name,
-        html: `<span class="mini-tiles">${s.preview.map((i) => `<span class="mini">${s.render(i)}</span>`).join('')}</span>`,
-      })),
+      tileset: tilesetOptions(),
       hidden: [
         { v: 'none', label: 'Brak' },
         { v: 'few', label: 'Kilka', sub: `${HIDDEN_COUNT.few} kafelków` },
@@ -771,7 +1078,6 @@
             // przy zmianie urządzenia wybierz pasujący układ, jeśli obecny jest za duży
             const cur = Layouts.list.find((l) => l.id === settings.layout);
             if (o.v === 'phone' && cur && !cur.phone) settings.layout = DEVICE_LAYOUT.phone;
-            showAllLayouts = false;
           }
           saveSettings();
           if (key === 'device') return buildMenu();
@@ -784,6 +1090,8 @@
   }
 
   function openMenu() {
+    showAllLayouts = false;
+    showAllTilesets = false;
     buildMenu();
     hideModals();
     $('#menuModal').hidden = false;
