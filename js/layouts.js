@@ -40,35 +40,33 @@ const Layouts = (() => {
       id: 'turtle',
       name: 'Żółw',
       build() {
-        const L = [];
-        R(L, 0, 1, 0, 12, 1);
-        R(L, 0, 3, 1, 8, 1);
-        R(L, 0, 2, 2, 10, 1);
-        R(L, 0, 1, 3, 12, 1);
-        R(L, 0, 1, 4, 12, 1);
-        R(L, 0, 2, 5, 10, 1);
-        R(L, 0, 3, 6, 8, 1);
-        R(L, 0, 1, 7, 12, 1);
-        T(L, 0, 0, 3.5);
-        T(L, 0, 13, 3.5);
-        T(L, 0, 14, 3.5);
-        R(L, 1, 4, 1, 6, 6);
-        R(L, 2, 5, 2, 4, 4);
-        R(L, 3, 6, 3, 2, 2);
-        T(L, 4, 6.5, 3.5);
-        return L; // 144
+        // skorupa z pięter przesuniętych o pół kafelka, z głową i ogonem
+        const L = pile([
+          '.##########.',
+          '..########..',
+          '############',
+          '############',
+          '..########..',
+          '.##########.',
+        ]);
+        T(L, 0, -1, 2.5);
+        T(L, 0, 12, 2.5);
+        T(L, 0, 13, 2.5);
+        return L;
       },
     },
     {
       id: 'pyramid',
       name: 'Piramida',
       build() {
-        const L = [];
-        R(L, 0, 0, 0, 8, 8);
-        R(L, 1, 1, 1, 6, 6);
-        R(L, 2, 2, 2, 4, 4);
-        R(L, 3, 3, 3, 2, 2);
-        return L; // 120
+        // pięć pięter, każde przesunięte o pół kafelka; na szczycie jeden rząd
+        return pile([
+          '##########',
+          '##########',
+          '##########',
+          '##########',
+          '##########',
+        ]);
       },
     },
     {
@@ -93,49 +91,45 @@ const Layouts = (() => {
       id: 'cross',
       name: 'Krzyż',
       build() {
-        const L = [];
-        R(L, 0, 0, 3, 12, 2);
-        R(L, 0, 5, 0, 2, 3);
-        R(L, 0, 5, 5, 2, 5);
-        R(L, 1, 2, 3, 8, 2);
-        R(L, 1, 5, 1, 2, 2);
-        R(L, 1, 5, 5, 2, 4);
-        R(L, 2, 4, 3, 4, 2);
-        R(L, 2, 5, 2, 2, 1);
-        R(L, 2, 5, 5, 2, 2);
-        R(L, 3, 5, 3, 2, 2);
-        return L; // 86
+        return pile([
+          '....###....',
+          '....###....',
+          '....###....',
+          '###########',
+          '###########',
+          '###########',
+          '....###....',
+          '....###....',
+          '....###....',
+        ]);
       },
     },
     {
       id: 'stairs',
       name: 'Schody',
       build() {
+        // każdy stopień przesunięty o pół kafelka w bok i w dół – przykrywa
+        // końce rzędów stopnia niżej
         const L = [];
-        R(L, 0, 0, 0, 10, 4);
-        R(L, 1, 2, 0, 8, 4);
-        R(L, 2, 4, 0, 6, 4);
-        R(L, 3, 6, 0, 4, 4);
-        return L; // 112
+        for (let k = 0; k < 4; k++) R(L, k, 2.5 * k, 0.5 * k, 10 - 2 * k, 4 - k);
+        return L;
       },
     },
     {
       id: 'flower',
       name: 'Kwiat',
       build() {
-        const L = [];
-        R(L, 0, 3, 3, 4, 4);
-        R(L, 0, 4, 0, 2, 3);
-        R(L, 0, 4, 7, 2, 3);
-        R(L, 0, 0, 4, 3, 2);
-        R(L, 0, 7, 4, 3, 2);
-        R(L, 1, 3, 3, 4, 4);
-        R(L, 1, 4, 1, 2, 2);
-        R(L, 1, 4, 7, 2, 2);
-        R(L, 1, 1, 4, 2, 2);
-        R(L, 1, 7, 4, 2, 2);
-        R(L, 2, 4, 4, 2, 2);
-        return L; // 76
+        // cztery płatki wokół dziury w środku
+        return pile([
+          '..####..',
+          '..####..',
+          '########',
+          '###..###',
+          '###..###',
+          '########',
+          '..####..',
+          '..####..',
+        ]);
       },
     },
     {
@@ -479,8 +473,8 @@ const Layouts = (() => {
     l.count = pos.length;
     const xs = pos.map((p) => p.x);
     const ys = pos.map((p) => p.y);
-    l.cols = (Math.max(...xs) - Math.min(...xs) + 2) / 2;
-    l.rows = (Math.max(...ys) - Math.min(...ys) + 2) / 2;
+    l.cols = Math.ceil((Math.max(...xs) - Math.min(...xs) + 2) / 2);
+    l.rows = Math.ceil((Math.max(...ys) - Math.min(...ys) + 2) / 2);
     l.phone = Math.min(l.cols, l.rows) <= PHONE_MAX[0] && Math.max(l.cols, l.rows) <= PHONE_MAX[1];
   });
   // od najmniejszych do największych
