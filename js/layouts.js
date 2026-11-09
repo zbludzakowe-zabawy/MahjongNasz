@@ -365,19 +365,12 @@ const Layouts = (() => {
       id: 'pyramids',
       name: 'Piramidki',
       build() {
-        // osiem piramidek 4+1 (górny kafelek przykrywa po kawałku każdy z czterech)
+        // pięć piramidek 4+1 na wspólnej, schodkowej podstawie: każdy szczyt
+        // przykrywa po kawałku czterech kafelków niżej, a te – kolejne cztery
         const L = [];
-        for (const y of [0, 2.5, 5]) {
-          for (const x of [0, 2.5, 5]) {
-            if (x === 2.5 && y === 2.5) continue;
-            R(L, 0, x, y, 2, 2);
-            T(L, 1, x + 0.5, y + 0.5);
-          }
-        }
-        // środkowa wieżyczka
-        R(L, 0, 2.5, 2.5, 2, 2);
-        T(L, 1, 3, 3);
-        T(L, 2, 3, 3);
+        R(L, 0, 0, 0, 5, 5);
+        R(L, 1, 0.5, 0.5, 4, 4);
+        for (const [x, y] of [[1, 1], [3, 1], [2, 2], [1, 3], [3, 3]]) T(L, 2, x, y);
         return L; // 46
       },
     },
@@ -403,15 +396,20 @@ const Layouts = (() => {
       },
     },
     {
-      id: 'checker',
-      name: 'Szachownica',
+      id: 'roofs',
+      name: 'Dachy',
       build() {
-        // na dole co drugie pole puste, wyżej kafelki na skos nad dziurami
+        // trzy długie dachy: kafelki wyżej przesunięte o pół, pod kalenicą dziura;
+        // wolne są tylko końce najwyższych rzędów
         const L = [];
-        for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if ((x + y) % 2 === 0) T(L, 0, x, y);
-        for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if ((x + y) % 2 === 0) T(L, 1, x + 0.5, y + 0.5);
-        T(L, 2, 3, 3);
-        return L; // 44
+        for (const y of [0, 2.5, 5]) {
+          R(L, 0, 0, y, 3, 2);
+          R(L, 0, 4, y, 3, 2);
+          R(L, 1, 0.5, y + 0.5, 6, 1);
+          R(L, 2, 1, y + 0.5, 5, 1);
+        }
+        T(L, 3, 3, 3);
+        return L; // 70
       },
     },
     {
