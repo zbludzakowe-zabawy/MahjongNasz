@@ -119,11 +119,22 @@ const Layouts = (() => {
       id: 'small',
       name: 'Mały kwadrat',
       build() {
+        // każde piętro przesunięte o pół kafelka i węższe – wolne są tylko
+        // brzegi najwyższego; w środku studnia (dziura przez dwa piętra)
         const L = [];
-        R(L, 0, 0, 0, 6, 6);
-        R(L, 1, 1, 1, 4, 4);
-        R(L, 2, 2, 2, 2, 2);
-        return L; // 56
+        R(L, 0, 0, 0, 6, 2);
+        R(L, 0, 0, 4, 6, 2);
+        R(L, 0, 0, 2, 2, 2);
+        R(L, 0, 4, 2, 2, 2);
+        R(L, 1, 0.5, 0.5, 5, 2);
+        R(L, 1, 0.5, 3.5, 5, 2);
+        R(L, 1, 0.5, 2.5, 2, 1);
+        R(L, 1, 3.5, 2.5, 2, 1);
+        R(L, 2, 1, 1, 4, 1);
+        R(L, 2, 1, 4, 4, 1);
+        R(L, 2, 1, 2, 1, 2);
+        R(L, 2, 4, 2, 1, 2);
+        return L; // 68
       },
     },
     {
@@ -311,13 +322,13 @@ const Layouts = (() => {
       id: 'tower',
       name: 'Wieża',
       build() {
+        // smukła wieża: każde piętro przesunięte o pół kafelka i węższe
         const L = [];
-        R(L, 0, 0, 0, 6, 9);
-        R(L, 1, 1, 1, 4, 7);
-        R(L, 2, 2, 2, 2, 5);
-        T(L, 3, 2.5, 3);
-        T(L, 3, 2.5, 5);
-        return L; // 94
+        R(L, 0, 0, 0, 4, 9);
+        R(L, 1, 0.5, 0.5, 3, 8);
+        R(L, 2, 1, 1, 2, 7);
+        R(L, 3, 1.5, 1.5, 1, 6);
+        return L; // 80
       },
     },
     {
@@ -350,14 +361,23 @@ const Layouts = (() => {
       id: 'littleturtle',
       name: 'Żółwik',
       build() {
+        // skorupa z pięter przesuniętych o pół kafelka; na górze pierścień
+        // z dziurą, więc środek odsłania się dopiero po zdjęciu brzegów
         const L = [];
-        R(L, 0, 1, 0, 5, 1);
-        R(L, 0, 0, 1, 7, 7);
+        R(L, 0, 1, 1, 5, 1);
+        R(L, 0, 0, 2, 7, 5);
+        R(L, 0, 1, 7, 5, 1);
+        T(L, 0, 3, 0);
+        T(L, 1, 3, 0);
         T(L, 0, 3, 8);
-        R(L, 1, 1, 2, 5, 5);
-        R(L, 2, 2, 3, 3, 3);
-        T(L, 3, 3, 4);
-        return L; // 106
+        R(L, 1, 1.5, 1.5, 4, 1);
+        R(L, 1, 0.5, 2.5, 6, 4);
+        R(L, 1, 1.5, 6.5, 4, 1);
+        R(L, 2, 1, 2, 5, 1);
+        R(L, 2, 1, 6, 5, 1);
+        R(L, 2, 1, 3, 1, 3);
+        R(L, 2, 5, 3, 1, 3);
+        return L; // 96
       },
     },
     // ---- układy z kafelkami przesuniętymi o pół pola i dziurami ----
@@ -432,21 +452,18 @@ const Layouts = (() => {
       id: 'wall',
       name: 'Mur',
       build() {
-        // rzędy ułożone jak cegły – co drugi przesunięty o pół kafelka
+        // rzędy jak cegły (co drugi przesunięty o pół), a każde piętro wyżej
+        // przesunięte o pół kafelka – przykrywa końce rzędów pod spodem
         const L = [];
-        for (let y = 0; y < 7; y++) {
-          if (y % 2 === 0) R(L, 0, 0, y, 7, 1);
-          else R(L, 0, 0.5, y, 6, 1);
-        }
-        for (let y = 1; y < 6; y++) {
-          if (y % 2 === 0) R(L, 1, 1, y, 5, 1);
-          else R(L, 1, 1.5, y, 4, 1);
-        }
-        R(L, 2, 2.5, 2, 2, 1);
-        R(L, 2, 2, 3, 3, 1);
-        R(L, 2, 2.5, 4, 2, 1);
-        T(L, 3, 3, 3);
-        return L; // 76
+        const bricks = (z, x, y, rows, wide) => {
+          for (let k = 0; k < rows; k++) R(L, z, x + (k % 2) * 0.5, y + k, wide - (k % 2), 1);
+        };
+        bricks(0, 0, 0, 6, 6);
+        bricks(1, 0.5, 0.5, 5, 5);
+        bricks(2, 1, 1, 4, 4);
+        R(L, 3, 1.5, 1.5, 3, 3);
+        T(L, 4, 2.5, 2.5);
+        return L; // 80
       },
     },
     {
