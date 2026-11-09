@@ -118,12 +118,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .board .tile.selected::after, .board .tile.hint::after { background: none; }
 .tile .face {
-  position: absolute; inset: 3%;
+  /* margines, żeby obrazek nie dotykał krawędzi kafelka */
+  position: absolute; inset: 6% 9%;
   display: grid; place-items: center;
   pointer-events: none;
 }
 .tile .tsvg { width: 100%; height: 100%; filter: saturate(1.2) contrast(1.1); }
-.tile .emoji { font-size: calc(var(--tw) * .82); line-height: 1; filter: saturate(1.2) contrast(1.08); }
+.tile .emoji { font-size: calc(var(--tw) * .64); line-height: 1; filter: saturate(1.2) contrast(1.08); }
 
 .tile .back {
   position: absolute; inset: 0; border-radius: inherit; display: none;
