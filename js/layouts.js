@@ -12,6 +12,29 @@ const Layouts = (() => {
   }
   const T = (L, z, x, y) => R(L, z, x, y, 1, 1);
 
+  // Stos z rysunku podstawy ('#' – kafelek, 'o' – dziura, '.' – puste).
+  // Każde piętro wyżej leży przesunięte o pół kafelka: kafelek kładziemy tam,
+  // gdzie pod spodem są cztery pola (dziura też się liczy – kafelek nad nią
+  // opiera się na trzech). Tak przykryte są końce rzędów niżej, więc naraz
+  // wolnych jest niewiele kafelków.
+  function pile(art, levels = 9) {
+    const L = [];
+    const holes = new Set();
+    let cur = [];
+    art.forEach((row, y) => [...row].forEach((c, x) => {
+      if (c === '#' || c === 'o') cur.push([2 * x, 2 * y]);
+      if (c === 'o') holes.add(`${2 * x},${2 * y}`);
+    }));
+    for (let z = 0; z < levels && cur.length; z++) {
+      cur.forEach(([x, y]) => { if (z > 0 || !holes.has(`${x},${y}`)) L.push({ x, y, z }); });
+      const has = new Set(cur.map(([x, y]) => `${x},${y}`));
+      cur = cur
+        .filter(([x, y]) => has.has(`${x + 2},${y}`) && has.has(`${x},${y + 2}`) && has.has(`${x + 2},${y + 2}`))
+        .map(([x, y]) => [x + 1, y + 1]);
+    }
+    return L;
+  }
+
   const list = [
     {
       id: 'turtle',
@@ -169,36 +192,31 @@ const Layouts = (() => {
       id: 'diamond',
       name: 'Diament',
       build() {
-        const L = [];
-        R(L, 0, 2, 0, 2, 1);
-        R(L, 0, 1, 1, 4, 1);
-        R(L, 0, 0, 2, 6, 2);
-        R(L, 0, 1, 4, 4, 1);
-        R(L, 0, 2, 5, 2, 1);
-        R(L, 1, 1, 2, 4, 2);
-        R(L, 1, 2, 1, 2, 1);
-        R(L, 1, 2, 4, 2, 1);
-        R(L, 2, 2, 2, 2, 2);
-        return L; // 40
+        // romb, każde piętro przesunięte o pół
+        return pile([
+          '..##..',
+          '.####.',
+          '######',
+          '######',
+          '.####.',
+          '..##..',
+        ]); // 42
       },
     },
     {
       id: 'hourglass',
       name: 'Klepsydra',
       build() {
-        const L = [];
-        R(L, 0, 0, 0, 6, 1);
-        R(L, 0, 1, 1, 4, 1);
-        R(L, 0, 2, 2, 2, 2);
-        R(L, 0, 1, 4, 4, 1);
-        R(L, 0, 0, 5, 6, 1);
-        R(L, 1, 1, 0, 4, 1);
-        R(L, 1, 2, 1, 2, 1);
-        R(L, 1, 2, 4, 2, 1);
-        R(L, 1, 1, 5, 4, 1);
-        R(L, 2, 2, 0, 2, 1);
-        R(L, 2, 2, 5, 2, 1);
-        return L; // 40
+        // dwa trójkąty stykające się wierzchołkami
+        return pile([
+          '######',
+          '######',
+          '.####.',
+          '..##..',
+          '.####.',
+          '######',
+          '######',
+        ]); // 56
       },
     },
     {
@@ -232,21 +250,16 @@ const Layouts = (() => {
       id: 'heart',
       name: 'Serce',
       build() {
-        const L = [];
-        R(L, 0, 1, 0, 2, 1);
-        R(L, 0, 4, 0, 2, 1);
-        R(L, 0, 0, 1, 7, 2);
-        R(L, 0, 1, 3, 5, 1);
-        R(L, 0, 2, 4, 3, 1);
-        T(L, 0, 3, 5);
-        R(L, 1, 1, 1, 2, 1);
-        R(L, 1, 4, 1, 2, 1);
-        R(L, 1, 1, 2, 5, 1);
-        R(L, 1, 2, 3, 3, 1);
-        T(L, 1, 3, 4);
-        R(L, 2, 2, 2, 3, 1);
-        T(L, 2, 3, 3);
-        return L; // 48
+        // pod środkiem serca dziura
+        return pile([
+          '.##.##.',
+          '#######',
+          '###o###',
+          '#######',
+          '.#####.',
+          '..###..',
+          '...#...',
+        ]); // 64
       },
     },
     {
@@ -277,22 +290,16 @@ const Layouts = (() => {
       id: 'butterfly',
       name: 'Motyl',
       build() {
-        const L = [];
-        R(L, 0, 0, 0, 3, 3);
-        R(L, 0, 4, 0, 3, 3);
-        R(L, 0, 0, 4, 3, 3);
-        R(L, 0, 4, 4, 3, 3);
-        R(L, 0, 3, 0, 1, 7);
-        R(L, 0, 1, 3, 2, 1);
-        R(L, 0, 4, 3, 2, 1);
-        R(L, 1, 0.5, 0.5, 2, 2);
-        R(L, 1, 4.5, 0.5, 2, 2);
-        R(L, 1, 0.5, 4.5, 2, 2);
-        R(L, 1, 4.5, 4.5, 2, 2);
-        R(L, 1, 3, 1, 1, 5);
-        R(L, 2, 3, 2, 1, 3);
-        T(L, 3, 3, 3);
-        return L; // 88
+        // skrzydła z „oczkami” – dziurami pod wyższymi piętrami
+        return pile([
+          '###.###',
+          '#o#####',
+          '#####o#',
+          '..###..',
+          '#o#####',
+          '#####o#',
+          '###.###',
+        ]); // 70
       },
     },
     {
