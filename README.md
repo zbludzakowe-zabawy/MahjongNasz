@@ -69,4 +69,4 @@ Po wygranej przycisk **Następny poziom** rozdaje nową planszę i daje nowy kom
 - `js/game.js` – logika gry
 - `js/pwa.js` – instalacja aplikacji i komunikat o nowej wersji
 - `sw.js` – service worker (gra offline); `tools/build-sw.mjs` przy publikacji wpisuje do niego wersję i listę plików
-- `manifest.webmanifest`, `icons/` – dane i ikony aplikacji
+- `manifest.webmanifest`, `icons/` – dane i ikony aplikacji (`icons/logo.svg` to źródło logo, z którego powstały ikony PNG)

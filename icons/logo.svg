@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <radialGradient id="cbg" cx="50%" cy="30%" r="80%">
+    <stop offset="0" stop-color="#2a7356"/><stop offset="1" stop-color="#123627"/>
+  </radialGradient>
+  <linearGradient id="cface" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#eadcb8"/>
+  </linearGradient>
+  <linearGradient id="cgold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffd970"/><stop offset="1" stop-color="#e89a1c"/>
+  </linearGradient>
+  <filter id="csh" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity=".35"/>
+  </filter>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#cbg)"/>
+<g filter="url(#csh)"><g transform="rotate(-8 256 266)"><g>
+  <rect x="152.0" y="116.0" width="236.0" height="316.0" rx="30.7" fill="#6f5329" stroke="#46301a" stroke-width="7.1"/>
+  <rect x="144.0" y="108.0" width="236.0" height="316.0" rx="30.7" fill="#c2a46e"/>
+  <rect x="136.0" y="100.0" width="236.0" height="316.0" rx="30.7" fill="url(#cface)" stroke="#46301a" stroke-width="7.1"/>
+  <path d="M254.0,166.0 L278.7,228.0 L345.3,232.3 L293.9,275.0 L310.4,339.7 L254.0,304.0 L197.6,339.7 L214.1,275.0 L162.7,232.3 L229.3,228.0 Z" fill="url(#cgold)" stroke="#9a5d00" stroke-width="8" stroke-linejoin="round"/>
+</g></g></g><path d="M408,82 Q414.12,109.88 442,116 Q414.12,122.12 408,150 Q401.88,122.12 374,116 Q401.88,109.88 408,82 Z" fill="#ffe08a"/><path d="M102,364 Q105.96,382.04 124,386 Q105.96,389.96 102,408 Q98.04,389.96 80,386 Q98.04,382.04 102,364 Z" fill="#ffe08a"/><path d="M430,201 Q432.34,211.66 443,214 Q432.34,216.34 430,227 Q427.66,216.34 417,214 Q427.66,211.66 430,201 Z" fill="#ffe08a"/>
+</svg>
