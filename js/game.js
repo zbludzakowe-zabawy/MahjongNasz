@@ -1086,6 +1086,7 @@
 
   function buildBoard() {
     boardEl.innerHTML = '';
+    boardEl.dataset.set = S.tileset.id;
     tileEls = S.tiles.map((t) => {
       const el = makeTileEl(t);
       el.addEventListener('click', () => clickTile(t));
@@ -1157,6 +1158,7 @@
 
   function renderTray(sel) {
     trayEl.innerHTML = '';
+    trayEl.dataset.set = S.tileset.id;
     const canDrop = sel && sel.loc === 'board';
     S.tray.forEach((id, i) => {
       const slot = document.createElement('div');
@@ -1284,7 +1286,7 @@
   function tilesetOpt(s) {
     return {
       v: s.id, label: s.name,
-      html: `<span class="mini-tiles">${s.preview.map((i) => `<span class="mini">${s.render(i)}</span>`).join('')}</span>`,
+      html: `<span class="mini-tiles" data-set="${s.id}">${s.preview.map((i) => `<span class="mini">${s.render(i)}</span>`).join('')}</span>`,
     };
   }
 

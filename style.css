@@ -119,12 +119,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .board .tile.selected::after, .board .tile.hint::after { background: none; }
 .tile .face {
   /* margines, żeby obrazek nie dotykał krawędzi kafelka */
-  position: absolute; inset: 6% 9%;
+  position: absolute; inset: 4% 6%;
   display: grid; place-items: center;
   pointer-events: none;
 }
-.tile .tsvg { width: 100%; height: 100%; filter: saturate(1.2) contrast(1.1); }
-.tile .emoji { font-size: calc(var(--tw) * .64); line-height: 1; filter: saturate(1.2) contrast(1.08); }
+.tile .tsvg { width: 100%; height: 100%; }
+.tile .emoji { font-size: calc(var(--tw) * .72); line-height: 1; }
+.tile .face > *, .mini > * { filter: var(--img-filter); }
+
+/* ---------- wygląd zestawów obrazków ----------
+   Każdy zestaw ma własne pastelowe tło kafelka i obrys obrazka:
+   ciemny kontur albo „naklejkę” (biały kontur z cieniem). */
+:root {
+  --outline: drop-shadow(0 0 .5px rgba(30, 20, 10, .95)) drop-shadow(0 0 .5px rgba(30, 20, 10, .8));
+  --sticker: drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff) drop-shadow(0 1.5px 1.5px rgba(0, 0, 0, .55));
+  --img-filter: saturate(1.25) contrast(1.1) var(--outline);
+}
+[data-set="animals"] { --tile-face: #f6e3a8; --tile-face2: #e3bf5c; }
+[data-set="fruits"] { --tile-face: #dcefc6; --tile-face2: #a9d184; }
+[data-set="nature"] { --tile-face: #d9def8; --tile-face2: #a6b2e8; }
+[data-set="sport"] { --tile-face: #cdeee0; --tile-face2: #8fcfb3; }
+[data-set="vehicles"] { --tile-face: #cde6f7; --tile-face2: #95c3e6; --img-filter: saturate(1.2) var(--sticker); }
+[data-set="sweets"] { --tile-face: #e1d8fa; --tile-face2: #b8a5ee; --img-filter: saturate(1.2) var(--sticker); }
+[data-set="music"] { --tile-face: #fbf3dc; --tile-face2: #e6d3a1; }
+[data-set="minecraft"] { --tile-face: #dcdcdc; --tile-face2: #b0b0b0; }
+[data-set="cats"] { --tile-face: #d3e3f7; --tile-face2: #a2bfe6; }
 
 .tile .back {
   position: absolute; inset: 0; border-radius: inherit; display: none;
@@ -283,10 +302,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mini {
   width: 26px; height: 34px; border-radius: 4px; display: grid; place-items: center;
   background: linear-gradient(150deg, var(--tile-face), var(--tile-face2));
-  box-shadow: 2px 2px 0 var(--tile-side2); padding: 2px;
+  box-shadow: 2px 2px 0 var(--tile-side2); padding: 3px;
+  overflow: hidden;
 }
-.mini .tsvg { width: 100%; height: 100%; }
-.mini .emoji { font-size: 21px; }
+.mini .tsvg { width: 100%; height: 100%; display: block; }
+.mini .emoji { font-size: 16px; line-height: 1; }
 
 .rules { padding-left: 20px; line-height: 1.5; color: #dfe9e3; }
 .rules li { margin-bottom: 8px; }
