@@ -360,6 +360,117 @@ const Layouts = (() => {
         return L; // 106
       },
     },
+    // ---- układy z kafelkami przesuniętymi o pół pola i dziurami ----
+    {
+      id: 'pyramids',
+      name: 'Piramidki',
+      build() {
+        // osiem piramidek 4+1 (górny kafelek przykrywa po kawałku każdy z czterech)
+        const L = [];
+        for (const y of [0, 2.5, 5]) {
+          for (const x of [0, 2.5, 5]) {
+            if (x === 2.5 && y === 2.5) continue;
+            R(L, 0, x, y, 2, 2);
+            T(L, 1, x + 0.5, y + 0.5);
+          }
+        }
+        // środkowa wieżyczka
+        R(L, 0, 2.5, 2.5, 2, 2);
+        T(L, 1, 3, 3);
+        T(L, 2, 3, 3);
+        return L; // 46
+      },
+    },
+    {
+      id: 'donut',
+      name: 'Pączek',
+      build() {
+        // pierścień z dziurą w środku, wyżej pierścień przesunięty o pół kafelka
+        const L = [];
+        R(L, 0, 0, 0, 7, 2);
+        R(L, 0, 0, 5, 7, 2);
+        R(L, 0, 0, 2, 2, 3);
+        R(L, 0, 5, 2, 2, 3);
+        R(L, 1, 0.5, 0.5, 6, 1);
+        R(L, 1, 0.5, 5.5, 6, 1);
+        R(L, 1, 0.5, 1.5, 1, 4);
+        R(L, 1, 5.5, 1.5, 1, 4);
+        T(L, 2, 1, 1);
+        T(L, 2, 5, 1);
+        T(L, 2, 1, 5);
+        T(L, 2, 5, 5);
+        return L; // 64
+      },
+    },
+    {
+      id: 'checker',
+      name: 'Szachownica',
+      build() {
+        // na dole co drugie pole puste, wyżej kafelki na skos nad dziurami
+        const L = [];
+        for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if ((x + y) % 2 === 0) T(L, 0, x, y);
+        for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if ((x + y) % 2 === 0) T(L, 1, x + 0.5, y + 0.5);
+        T(L, 2, 3, 3);
+        return L; // 44
+      },
+    },
+    {
+      id: 'blossom',
+      name: 'Kwiatek',
+      build() {
+        // cztery płatki-piramidki wokół wyższego środka
+        const L = [];
+        for (const [x, y] of [[2.5, 0], [0, 3], [5, 3], [2.5, 6]]) {
+          R(L, 0, x, y, 2, 2);
+          T(L, 1, x + 0.5, y + 0.5);
+        }
+        R(L, 0, 2, 2.5, 3, 3);
+        R(L, 1, 2.5, 3, 2, 2);
+        T(L, 2, 3, 3.5);
+        return L; // 34
+      },
+    },
+    {
+      id: 'wall',
+      name: 'Mur',
+      build() {
+        // rzędy ułożone jak cegły – co drugi przesunięty o pół kafelka
+        const L = [];
+        for (let y = 0; y < 7; y++) {
+          if (y % 2 === 0) R(L, 0, 0, y, 7, 1);
+          else R(L, 0, 0.5, y, 6, 1);
+        }
+        for (let y = 1; y < 6; y++) {
+          if (y % 2 === 0) R(L, 1, 1, y, 5, 1);
+          else R(L, 1, 1.5, y, 4, 1);
+        }
+        R(L, 2, 2.5, 2, 2, 1);
+        R(L, 2, 2, 3, 3, 1);
+        R(L, 2, 2.5, 4, 2, 1);
+        T(L, 3, 3, 3);
+        return L; // 76
+      },
+    },
+    {
+      id: 'windows',
+      name: 'Okienka',
+      build() {
+        // płyta z pięcioma okienkami; nad każdym okienkiem daszek z przesuniętych kafelków
+        const L = [];
+        const holes = ['1,1', '5,1', '3,3', '1,5', '5,5'];
+        for (let y = 0; y < 7; y++) {
+          for (let x = 0; x < 7; x++) if (!holes.includes(`${x},${y}`)) T(L, 0, x, y);
+        }
+        T(L, 1, 0.5, 0.5);
+        T(L, 1, 5.5, 0.5);
+        T(L, 1, 0.5, 5.5);
+        T(L, 1, 5.5, 5.5);
+        R(L, 1, 2.5, 2.5, 2, 2);
+        T(L, 2, 3, 3);
+        T(L, 3, 3, 3);
+        return L; // 54
+      },
+    },
   ];
 
   // Telefon: układy najwyżej 7 kafelków szerokie i 9 wysokie (w dowolnej
