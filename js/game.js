@@ -1328,8 +1328,8 @@
         { v: true, label: 'Włączone' },
       ],
       mode: [
-        { v: 'fixed', label: 'Stały', sub: 'każdy poziom według ustawień' },
-        { v: 'variable', label: 'Zmienny', sub: 'nowy układ i obrazki co poziom, coraz więcej zakrytych' },
+        { v: 'fixed', label: 'Stały', sub: 'wszystkie poziomy według twoich ustawień' },
+        { v: 'variable', label: 'Zmienny', sub: 'losuję nowe ustawienia na kolejnych poziomach' },
       ],
       difficulty: [1, 2, 3, 4, 5].map((n) => ({ v: n, label: String(n), sub: DIFFICULTY[n].label })),
     };
