@@ -144,6 +144,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 [data-set="music"] { --tile-face: #fbf3dc; --tile-face2: #e6d3a1; }
 [data-set="minecraft"] { --tile-face: #dcdcdc; --tile-face2: #b0b0b0; }
 [data-set="cats"] { --tile-face: #d3e3f7; --tile-face2: #a2bfe6; }
+[data-set="mountains"] { --tile-face: #ece3d0; --tile-face2: #cdb98f; }
 
 .tile .back {
   position: absolute; inset: 0; border-radius: inherit; display: none;
