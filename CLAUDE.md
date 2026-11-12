@@ -35,7 +35,7 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 - `pile(art)` buduje stos z rysunku podstawy: `#` to kafelek, `o` to dziura, `.` to puste pole. Każde piętro wyżej leży przesunięte o pół kafelka: kafelek trafia tam, gdzie pod spodem są 4 pola. Dziura `o` też się liczy, więc kafelek nad nią opiera się na trzech.
 - Przy ładowaniu liczone są `count`, `cols`, `rows` (zaokrąglone w górę) i `phone`. Lista jest sortowana od najmniejszej liczby kafelków. `id` jest trwały (zapis ustawień, statystyki wyboru, `DEFAULT_LAYOUTS`/`DEVICE_LAYOUT` w `game.js`), nazwę można zmieniać.
 - **Zasada dobrego układu:** w każdej chwili ma być wolnych niewiele kafelków. Wyższe piętro przesunięte o pół kafelka i węższe o pół z każdej strony przykrywa końce rzędów niżej, więc wolne są tylko brzegi najwyższego piętra. Kolumny pojedynczych kafelków są zawsze wolne (blokują tylko sąsiedzi z lewej i prawej), tak samo kafelki bez sąsiadów (np. „szachownica”). Takich miejsc należy unikać.
-- Cele (z `tools/check-layouts.mjs`): wolnych na starcie najwyżej ok. 12, średnio w trakcie gry najwyżej ok. 11, liczba kafelków parzysta. Obecnie wszystkie układy na telefon i duże układy spełniają te cele.
+- Cele (z `tools/check-layouts.mjs`): wolnych na starcie najwyżej ok. 12, średnio w trakcie gry najwyżej ok. 12, liczba kafelków parzysta. Obecnie spełniają je wszystkie układy.
 - Na pionowym ekranie szeroki układ jest obracany (x ↔ y) w `newGame`, gdy jest szerszy niż wyższy. Po obrocie rzędy stają się kolumnami, a ciasność układu się zmienia. Układy na telefon projektuj więc jako wyższe niż szersze albo prawie kwadratowe.
 
 ## Reguły gry (`js/game.js`)
@@ -54,7 +54,7 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 ## Zestawy obrazków (`js/tilesets.js`)
 - Nowy zestaw: dopisz do `list` przez `emojiSet(id, name, 'emoji oddzielone spacjami')` albo `facesSet(id, name, [funkcje → SVG], preview)`. Rysunki SVG w `viewBox 0 0 60 80`, dobrze czytelne w małym rozmiarze (obrys, wyraźne kolory).
 - Do tego kolory tła kafelka w `style.css`: `[data-set="<id>"]`. Każdy zestaw ma własne pastelowe tło.
-- Liczba różnych obrazków ≥ 36 (przy trudności 5 każdy obrazek ma tylko jedną parę).
+- Każdy zestaw ma co najmniej 36 różnych obrazków (przy trudności 5 każdy obrazek ma w miarę możliwości tylko jedną parę).
 
 ## PWA i ikony
 - Przepis: skill „pwa-na-telefon”. Nowa wersja czeka na „Odśwież”, a partia zostaje zachowana.
