@@ -71,3 +71,5 @@ Po wygranej przycisk **Następny poziom** rozdaje nową planszę i daje nowy kom
 - `js/pwa.js` – instalacja aplikacji i komunikat o nowej wersji
 - `sw.js` – service worker (gra offline); `tools/build-sw.mjs` przy publikacji wpisuje do niego wersję i listę plików
 - `manifest.webmanifest`, `icons/` – dane i ikony aplikacji (`icons/logo.svg` to źródło logo, z którego powstały ikony PNG)
+- `tools/check-layouts.mjs` – sprawdza układy (`node tools/check-layouts.mjs`): błędy i to, ile kafelków jest wolnych naraz
+- `CLAUDE.md` – notatki o budowie gry dla Claude
