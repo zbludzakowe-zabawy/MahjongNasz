@@ -43,12 +43,14 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 - Rozdanie zawsze da się rozwiązać: `solvableOrder` zdejmuje losowe pary wolnych kafelków (60% z najwyższego piętra), do 80 prób. Obrazki przydziela się parom w tej kolejności. `S.solution` służy lupie i miksowaniu.
 - Trudność 1–5 (`DIFFICULTY`): `ratio` (ile par na jeden obrazek), `glow` (podświetlanie pasujących).
 - Schowek: 4 miejsca (`SLOTS`). Pomoce: po 2 na poziom (lupa, cofnij, miksuj). Gwiazdki: 4 na starcie, wygrana także wtedy, gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki zakryte (rewersem do góry) odwraca się kliknięciem; po 4 odwróceniach (`FLIPS_TO_STAY`) zostają odkryte na stałe.
+- Kafelek ×3 (`t.bonus`, ustawienie `bonus`, `BONUS_RATE`): zebranie pary z nim uruchamia `startAuto(3)`. Gra zbiera wtedy sama pary po kolei z animacją (`autoPair` najpierw bierze pary z `S.solution`, bo zdjęcie pary z rozwiązania wcześniej nie psuje reszty rozwiązania; potem dowolne dostępne; kafelki rewersem do góry pomija). Zebrane w ten sposób pary nie robią snapshotu, więc cofnięcie cofa całą serię. W trakcie serii `autoToken` blokuje kliknięcia i pomoce. Przy miksowaniu znaczek ×3 wędruje razem z obrazkiem, tak jak gwiazdka.
+- Cel `goal: 'kinds'` (Każdy rodzaj): wygrana (`win('kinds')`), gdy z każdego rodzaju obrazka zebrano parę. Zebrane rodzaje to obrazki kafelków z `loc === 'gone'` (`doneKinds()`), a `S.kindsTotal` to liczba rodzajów w rozdaniu. Licznik „Rodzaje” w HUD, przygaszone obrazki (`.kind-done`).
 - Tryb `variable` (Zmienny): po wygranej `nextVariant` zmienia układ i obrazki, zakrytych kafelków przybywa (2, 4, … do 30), gwiazdki włączają się i wyłączają co najwyżej co 4 poziomy.
 - Menu pokazuje 7 najczęściej wybieranych układów i 5 zestawów (`layoutUse`/`tilesetUse`), resztę chowa pod przyciskiem „Więcej …”. Zanim gracz coś wybierze, pokazuje domyślne propozycje.
 
 ## Stan w localStorage
-- `mahjongnasz-settings`: `{ v:2, layout, tileset, hidden, stars, dim, difficulty, device:'phone'|'desktop', mode:'fixed'|'variable', layoutUse, tilesetUse }`.
-- `mahjongnasz-game` (partia zapisywana po każdym ruchu): `{ v:1, layout, tileset, difficulty, tiles:[[x,y,z,face,star,faceDown,loc,slot,flips]…], tray, helps, history, solution, starPath, level, stars, hiddenN, starsAge, elapsed }`. Pozycje kafelków są zapisane w partii, więc zmiana kształtu układu nie psuje zapisanej gry. Usunięcie układu albo zestawu sprawia, że partia się nie wczyta i gra otwiera menu.
+- `mahjongnasz-settings`: `{ v:2, layout, tileset, hidden, stars, dim, difficulty, device:'phone'|'desktop', mode:'fixed'|'variable', bonus:'none'|'rare'|'often', goal:'all'|'kinds', layoutUse, tilesetUse }`.
+- `mahjongnasz-game` (partia zapisywana po każdym ruchu): `{ v:1, layout, tileset, difficulty, tiles:[[x,y,z,face,star,faceDown,loc,slot,flips,bonus]…], tray, helps, history, solution, starPath, level, stars, hiddenN, starsAge, goal, elapsed }`. Nowe pola dopisuj na końcu i czytaj z wartością domyślną, żeby stare zapisy dalej się wczytywały. Pozycje kafelków są zapisane w partii, więc zmiana kształtu układu nie psuje zapisanej gry. Usunięcie układu albo zestawu sprawia, że partia się nie wczyta i gra otwiera menu.
 - `mahjongnasz-install-dismissed`: ukryty baner instalacji.
 
 ## Zestawy obrazków (`js/tilesets.js`)

@@ -12,6 +12,10 @@
   // Tryb „zmienny”: z każdym poziomem przybywa zakrytych kafelków (2, 4, 6…)
   const VARIABLE_HIDDEN_STEP = 2;
   const VARIABLE_HIDDEN_MAX = 30;
+  // Kafelek ×3: po zebraniu pary z takim kafelkiem gra sama zbiera kolejne pary.
+  // Ile kafelków przypada na jeden kafelek ×3 (co najmniej jeden na planszy).
+  const BONUS_RATE = { none: 0, rare: 30, often: 20 };
+  const BONUS_PAIRS = 3;
 
   // Poziom trudności (1-5) działa niezależnie od pozostałych opcji:
   //  ratio    – ile par przypada na jeden rodzaj obrazka (więcej = łatwiej)
@@ -53,7 +57,7 @@
 
   const DEFAULTS = {
     v: 2, layout: null, tileset: 'music', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null,
-    mode: 'fixed',
+    mode: 'fixed', bonus: 'rare', goal: 'all',
     layoutUse: {}, tilesetUse: {},
   };
   const settings = loadSettings();
@@ -68,6 +72,7 @@
   let geo = null; // wymiary kafelków z ostatniego layoutBoard()
   let mixToken = 0; // trwająca animacja miksowania (0 – brak)
   let flipLock = false; // odwrócony kafelek za chwilę zniknie w parze
+  let autoToken = 0; // trwa automatyczne zbieranie par po kafelku ×3 (0 – nie)
 
   // ---------- narzędzia ----------
   function shuffle(a) {
@@ -134,7 +139,7 @@
         layout: S.layout.id,
         tileset: S.tileset.id,
         difficulty: S.diffKey,
-        tiles: S.tiles.map((t) => [t.x, t.y, t.z, t.face, t.star ? 1 : 0, t.faceDown ? 1 : 0, t.loc, t.slot, t.flips]),
+        tiles: S.tiles.map((t) => [t.x, t.y, t.z, t.face, t.star ? 1 : 0, t.faceDown ? 1 : 0, t.loc, t.slot, t.flips, t.bonus ? 1 : 0]),
         tray: S.tray,
         helps: S.helps,
         // cofnąć można najwyżej tyle ruchów, ile zostało cofnięć
@@ -145,6 +150,7 @@
         stars: S.stars,
         hiddenN: S.hiddenN,
         starsAge: S.starsAge,
+        goal: S.goal,
         elapsed: S.over ? S.elapsed : Date.now() - S.start,
       }));
     } catch (e) { /* brak miejsca lub dostępu – gra działa dalej bez zapisu */ }
@@ -166,8 +172,8 @@
     const tileset = TileSets.list.find((t) => t.id === g.tileset);
     const diff = DIFFICULTY[g.difficulty];
     if (!layout || !tileset || !diff) return false;
-    const tiles = g.tiles.map(([x, y, z, face, star, faceDown, loc, slot, flips], id) => ({
-      id, x, y, z, face, star: !!star, faceDown: !!faceDown, loc, slot, flips: flips || 0,
+    const tiles = g.tiles.map(([x, y, z, face, star, faceDown, loc, slot, flips, bonus], id) => ({
+      id, x, y, z, face, star: !!star, faceDown: !!faceDown, loc, slot, flips: flips || 0, bonus: !!bonus,
     }));
     computeNeighbors(tiles);
     S = {
@@ -184,6 +190,8 @@
       stars: typeof g.stars === 'boolean' ? g.stars : settings.stars,
       hiddenN: typeof g.hiddenN === 'number' ? g.hiddenN : tiles.filter((t) => t.faceDown).length,
       starsAge: g.starsAge || 0,
+      goal: g.goal === 'kinds' ? 'kinds' : 'all',
+      kindsTotal: new Set(tiles.map((t) => t.face)).size,
       start: Date.now() - (g.elapsed || 0),
       elapsed: 0,
       over: false,
@@ -262,6 +270,7 @@
     clearStarShow();
     stopMix();
     flipLock = false;
+    autoToken = 0;
     const v = variant || {
       layout: settings.layout,
       tileset: settings.tileset,
@@ -289,7 +298,7 @@
     const minY = Math.min(...pos.map((p) => p.y));
     const tiles = pos.map((p, i) => ({
       id: i, x: p.x - minX, y: p.y - minY, z: p.z,
-      face: -1, star: false, faceDown: false, flips: 0, loc: 'board', slot: -1,
+      face: -1, star: false, faceDown: false, flips: 0, loc: 'board', slot: -1, bonus: false,
     }));
     computeNeighbors(tiles);
 
@@ -314,6 +323,15 @@
         .forEach((t) => (t.faceDown = true));
     }
 
+    // kafelki ×3 – najpierw spośród odkrytych
+    const rate = BONUS_RATE[settings.bonus] || 0;
+    if (rate) {
+      const n = Math.max(1, Math.floor(tiles.length / rate));
+      const open = shuffle(tiles.filter((t) => !t.faceDown));
+      const closed = shuffle(tiles.filter((t) => t.faceDown));
+      open.concat(closed).slice(0, n).forEach((t) => (t.bonus = true));
+    }
+
     // gwiazdki
     if (v.stars) {
       shuffle(tiles.filter((t) => !t.faceDown)).slice(0, INITIAL_STARS).forEach((t) => (t.star = true));
@@ -333,6 +351,8 @@
       stars: !!v.stars,
       hiddenN,
       starsAge: v.starsAge || 0,
+      goal: settings.goal === 'kinds' ? 'kinds' : 'all',
+      kindsTotal: new Set(tiles.map((t) => t.face)).size,
       start: Date.now(),
       elapsed: 0,
       over: false,
@@ -355,7 +375,7 @@
   }
 
   function clickTile(t) {
-    if (!S || S.over || mixToken || flipLock) return;
+    if (!S || S.over || mixToken || flipLock || autoToken) return;
     if (t.loc === 'board' && !isFree(t)) {
       nudge(t);
       return;
@@ -417,7 +437,7 @@
   }
 
   function clickSlot(i) {
-    if (!S || S.over || mixToken || flipLock || S.tray[i] !== null || S.selected === null) return;
+    if (!S || S.over || mixToken || flipLock || autoToken || S.tray[i] !== null || S.selected === null) return;
     const t = S.tiles[S.selected];
     if (t.loc === 'board') moveToTray(t, i);
   }
@@ -449,7 +469,8 @@
     afterMove();
   }
 
-  // skipSnapshot – ruch był już zapisany (para dopasowana w schowku)
+  // skipSnapshot – ruch był już zapisany (para dopasowana w schowku albo
+  // zebrana automatycznie po kafelku ×3 – cofnięcie cofa wtedy całą serię)
   function removePair(a, b, skipSnapshot) {
     clearHint();
     if (!skipSnapshot) snapshot();
@@ -473,7 +494,106 @@
       chosen.forEach((t) => (t.star = true));
       S.newStars = chosen.map((t) => t.id);
     }
+    const bonus = (a.bonus ? 1 : 0) + (b.bonus ? 1 : 0);
+    if (bonus) startAuto(bonus * BONUS_PAIRS);
     afterMove();
+  }
+
+  // ---------- kafelek ×3: automatyczne zbieranie par ----------
+  // Para do zebrania: najpierw z zaplanowanego rozwiązania (zdjęcie jego pary
+  // wcześniej nie psuje reszty rozwiązania), potem dowolna dostępna.
+  // Kafelki rewersem do góry na stosie są pomijane.
+  function autoPair() {
+    const ok = (t) => t.loc === 'tray' || (isFree(t) && !t.faceDown);
+    if (S.solution) {
+      for (const [i, j] of S.solution) {
+        const a = S.tiles[i];
+        const b = S.tiles[j];
+        if (a.loc !== 'gone' && b.loc !== 'gone' && a.face === b.face && ok(a) && ok(b)) return [a, b];
+      }
+    }
+    const byFace = new Map();
+    const cand = S.tiles.filter((t) => t.loc !== 'gone' && ok(t))
+      .sort((a, b) => (a.loc === 'board' ? 0 : 1) - (b.loc === 'board' ? 0 : 1));
+    for (const t of cand) {
+      const prev = byFace.get(t.face);
+      if (prev) return [prev, t];
+      byFace.set(t.face, t);
+    }
+    return null;
+  }
+
+  function startAuto(n) {
+    S.autoLeft = (S.autoLeft || 0) + n;
+    S.autoWanted = (S.autoWanted || 0) + n;
+    if (autoToken) { // już trwa – kolejny kafelek ×3 wydłuża serię
+      toast(`✨ Kolejny kafelek ×3! +${n} pary`, 2000);
+      return;
+    }
+    S.autoDone = 0;
+    const token = ++autoToken;
+    const game = S;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const T = reduce ? { first: 250, show: 250, fly: 0, next: 150 } : { first: 600, show: 450, fly: 400, next: 250 };
+    toast(`✨ Kafelek ×3! Zbieram ${n} ${n === 3 ? 'kolejne pary' : 'par'}…`, 2000);
+    const alive = () => token === autoToken && S === game && !S.over;
+    const finish = () => {
+      autoToken = 0;
+      S.auto = [];
+      const done = S.autoDone;
+      const wanted = S.autoWanted;
+      S.autoLeft = S.autoWanted = S.autoDone = 0;
+      render();
+      saveGame();
+      if (done < wanted) toast(done ? `Zebrano ${done} z ${wanted} par – więcej nie było dostępnych` : 'Brak dostępnych par do zebrania');
+      if (isStuck()) setTimeout(showStuck, 450);
+    };
+    const step = () => {
+      if (!alive()) return;
+      const pair = S.autoLeft > 0 ? autoPair() : null;
+      if (!pair) return finish();
+      S.autoLeft--;
+      S.auto = pair.map((t) => t.id);
+      render();
+      setTimeout(() => {
+        if (!alive()) return;
+        const anims = reduce ? [] : flyTogether(pair, T.fly);
+        setTimeout(() => {
+          if (!alive()) return;
+          S.auto = [];
+          S.autoDone++;
+          removePair(pair[0], pair[1], true);
+          setTimeout(() => anims.forEach((an) => an.cancel()), 350);
+          if (!S.over) setTimeout(step, T.next);
+        }, T.fly);
+      }, T.show);
+    };
+    setTimeout(step, T.first);
+  }
+
+  // kafelki pary zlatują się do siebie, rosną i znikają w wirze
+  function flyTogether(pair, ms) {
+    const onBoard = pair.filter((t) => t.loc === 'board');
+    if (!geo || !onBoard.length) return [];
+    const cs = onBoard.map(tileCenter);
+    const mx = cs.reduce((s, c) => s + c.x, 0) / cs.length;
+    const my = cs.reduce((s, c) => s + c.y, 0) / cs.length;
+    return onBoard.map((t, i) => {
+      const dx = (mx - cs[i].x).toFixed(1);
+      const dy = (my - cs[i].y - geo.th * 0.3).toFixed(1);
+      const el = tileEls[t.id];
+      el.style.zIndex = '150000';
+      return el.animate([
+        { transform: 'none', opacity: 1 },
+        { transform: `translate(${dx}px,${dy}px) scale(1.25) rotate(${i ? 12 : -12}deg)`, opacity: 1, offset: 0.65 },
+        { transform: `translate(${dx}px,${dy}px) scale(.15) rotate(${i ? 200 : -200}deg)`, opacity: 0 },
+      ], { duration: ms, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+    });
+  }
+
+  // cel „Każdy rodzaj”: rodzaje obrazków, z których zebrano już parę
+  function doneKinds() {
+    return new Set(S.tiles.filter((t) => t.loc === 'gone').map((t) => t.face));
   }
 
   function afterMove() {
@@ -481,10 +601,11 @@
     saveGame();
     const left = S.tiles.filter((t) => t.loc !== 'gone');
     if (left.length === 0) return win('clear');
+    if (S.goal === 'kinds' && doneKinds().size >= S.kindsTotal) return win('kinds');
     // gwiazdki liczą się tylko na stosie – kafelki w schowku są pomijane
     const onStack = left.filter((t) => t.loc === 'board');
     if (S.stars && onStack.length && onStack.every((t) => t.star)) return win('stars');
-    if (isStuck()) setTimeout(showStuck, 450);
+    if (!autoToken && isStuck()) setTimeout(showStuck, 450);
   }
 
   function findPair() {
@@ -508,7 +629,7 @@
 
   // ---------- pomoce ----------
   function useHint() {
-    if (!S || S.over || mixToken || flipLock) return;
+    if (!S || S.over || mixToken || flipLock || autoToken) return;
     if (S.helps.hint <= 0) return toast('Lupa już wykorzystana');
     const pair = findPair();
     if (!pair) {
@@ -533,7 +654,7 @@
   }
 
   function useUndo() {
-    if (!S || mixToken || flipLock) return;
+    if (!S || mixToken || flipLock || autoToken) return;
     if (S.helps.undo <= 0) return toast('Cofanie już wykorzystane');
     const h = S.history.pop();
     if (!h) return toast('Nie ma czego cofnąć');
@@ -555,7 +676,7 @@
   }
 
   function useShuffle() {
-    if (!S || mixToken || flipLock) return;
+    if (!S || mixToken || flipLock || autoToken) return;
     if (S.helps.shuffle <= 0) return toast('Miksowanie już wykorzystane');
     const board = S.tiles.filter((t) => t.loc === 'board');
     if (board.length < 2) return toast('Za mało kafelków do miksowania');
@@ -643,7 +764,7 @@
 
   // nowy przydział obrazków dla kafelków na stosie – tak, by dało się grać dalej
   function mixFaces(board) {
-    const items = board.map((t) => ({ face: t.face, star: t.star }));
+    const items = board.map((t) => ({ face: t.face, star: t.star, bonus: t.bonus }));
     const groups = new Map();
     items.forEach((it) => {
       if (!groups.has(it.face)) groups.set(it.face, []);
@@ -658,7 +779,7 @@
     shuffle(pairItems);
 
     const order = solvableOrder(board, S.tiles);
-    const assign = (t, it) => { t.face = it.face; t.star = it.star; };
+    const assign = (t, it) => { t.face = it.face; t.star = it.star; t.bonus = it.bonus; };
     if (order) {
       let i = 0;
       for (; i < pairItems.length && i < order.pairs.length; i++) {
@@ -717,6 +838,9 @@
   // ---------- koniec gry ----------
   function win(kind) {
     S.over = true;
+    autoToken = 0;
+    S.auto = [];
+    S.autoLeft = S.autoWanted = S.autoDone = 0;
     S.elapsed = Date.now() - S.start;
     clearSavedGame();
     if (kind === 'stars') {
@@ -729,10 +853,10 @@
 
   function showWinModal(kind) {
     if (!S || !S.over) return;
-    const title = kind === 'stars' ? '⭐ Gwiezdne zwycięstwo! ⭐' : 'Brawo! Plansza oczyszczona!';
-    const msg = kind === 'stars'
-      ? 'Wszystkie pozostałe kafelki mają gwiazdki.'
-      : 'Zebrano wszystkie kafelki.';
+    const title = kind === 'stars' ? '⭐ Gwiezdne zwycięstwo! ⭐'
+      : kind === 'kinds' ? 'Brawo! Masz każdy rodzaj!' : 'Brawo! Plansza oczyszczona!';
+    const msg = kind === 'stars' ? 'Wszystkie pozostałe kafelki mają gwiazdki.'
+      : kind === 'kinds' ? `Zebrano parę każdego z ${S.kindsTotal} rodzajów obrazków.` : 'Zebrano wszystkie kafelki.';
     showModal('#endModal', {
       title,
       body: `<p>${msg}</p>${kind === 'stars' ? starLegend() : ''}<p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`
@@ -745,7 +869,7 @@
   }
 
   function showStuck() {
-    if (!S || S.over || !isStuck()) return;
+    if (!S || S.over || autoToken || !isStuck()) return;
     const buttons = [];
     if (S.helps.undo > 0 && S.history.length) {
       buttons.push({ label: `↶ Cofnij (${S.helps.undo})`, primary: true, action: useUndo });
@@ -1072,7 +1196,7 @@
   function makeTileEl(t) {
     const el = document.createElement('div');
     el.className = 'tile';
-    el.innerHTML = `<div class="face">${S.tileset.render(t.face)}</div><div class="back"></div><div class="star">${starSvg()}</div>`;
+    el.innerHTML = `<div class="face">${S.tileset.render(t.face)}</div><div class="back"></div><div class="star">${starSvg()}</div><div class="bonus">×3</div>`;
     el.dataset.face = String(t.face);
     return el;
   }
@@ -1138,6 +1262,8 @@
   function render() {
     if (!S) return;
     const sel = S.selected !== null ? S.tiles[S.selected] : null;
+    const kinds = S.goal === 'kinds' ? doneKinds() : null;
+    const auto = S.auto || [];
     S.tiles.forEach((t, i) => {
       const el = tileEls[i];
       const free = isFree(t);
@@ -1150,6 +1276,10 @@
       c.toggle('hint', S.hint.includes(t.id));
       c.toggle('starred', t.star);
       c.toggle('newstar', S.newStars.includes(t.id));
+      c.toggle('bonused', !!t.bonus);
+      c.toggle('autopick', auto.includes(t.id));
+      c.toggle('kind-done', !!(kinds && kinds.has(t.face)) && isRevealed(t));
+      if (!auto.includes(t.id) && el.style.zIndex === '150000') el.style.zIndex = String(t.z * 10000 + t.y * 100 + t.x + 10);
       c.toggle('glow', !!(S.diff.glow && sel && free && isRevealed(t) && t.id !== sel.id && t.face === sel.face));
     });
     renderTray(sel);
@@ -1174,6 +1304,9 @@
         el.classList.toggle('selected', S.selected === id);
         el.classList.toggle('hint', S.hint.includes(id));
         el.classList.toggle('starred', t.star);
+        el.classList.toggle('bonused', !!t.bonus);
+        el.classList.toggle('autopick', (S.auto || []).includes(id));
+        el.classList.toggle('kind-done', !!(S.goal === 'kinds' && doneKinds().has(t.face)));
         el.classList.toggle('glow', !!(S.diff.glow && sel && id !== sel.id && t.face === sel.face));
         el.addEventListener('click', () => clickTile(t));
         slot.appendChild(el);
@@ -1187,6 +1320,9 @@
     $('#statLevel').textContent = S.level;
     $('#statLeft').textContent = left;
     $('#statDiff').textContent = S.diffKey;
+    const kindStat = $('#statKindsBox');
+    kindStat.hidden = S.goal !== 'kinds';
+    if (S.goal === 'kinds') $('#statKinds').textContent = `${doneKinds().size}/${S.kindsTotal}`;
     const starStat = $('#statStarsBox');
     starStat.hidden = !S.stars;
     if (S.stars) {
@@ -1326,6 +1462,15 @@
       dim: [
         { v: false, label: 'Wyłączone' },
         { v: true, label: 'Włączone' },
+      ],
+      bonus: [
+        { v: 'none', label: 'Brak' },
+        { v: 'rare', label: 'Rzadko', sub: `1 na ${BONUS_RATE.rare} kafelków` },
+        { v: 'often', label: 'Częściej', sub: `1 na ${BONUS_RATE.often} kafelków` },
+      ],
+      goal: [
+        { v: 'all', label: 'Wszystkie kafelki', sub: 'oczyść całą planszę' },
+        { v: 'kinds', label: 'Każdy rodzaj', sub: 'wystarczy po 1 parze każdego obrazka' },
       ],
       mode: [
         { v: 'fixed', label: 'Stały', sub: 'wszystkie poziomy według twoich ustawień' },
