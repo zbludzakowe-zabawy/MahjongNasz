@@ -12,6 +12,10 @@ Rozmowy, interfejs gry, komentarze w kodzie, commity i opisy PR są po polsku.
 - **Gra jest przede wszystkim na telefon.** Układ na telefon ma najwyżej 7 kafelków szerokości i 9 wysokości (`PHONE_MAX` w `js/layouts.js`, w dowolnej orientacji).
 - Po zmianie opcji, układów albo zestawów obrazków zaktualizuj README (lista układów z liczbą kafelków, opis opcji).
 - Gdy zadanie ma kilka wariantów (np. nowe układy, logo), przygotuj kilka propozycji ze zrzutami do wyboru.
+- **Podgląd do klikania przed publikacją:** właściciel repozytorium chce sam przeklikać nową wersję, zanim trafi na stronę. Po każdej zmianie gry (przed PR albo razem z PR) opublikuj podgląd jako Artifact i podaj link. Strona na GitHub Pages zmienia się dopiero po scaleniu PR do `main`.
+  - Podgląd: https://claude.ai/artifact/4tBFwRmwx4NTCVQbEaBZjq – aktualizuj go zawsze pod tym samym adresem. W nowej rozmowie najpierw `Artifact` z `action: "read"` i tym `url`, potem publikacja z tym samym `url`.
+  - Publikacja: `file_path` = `index.html`, a w `files` wszystkie pliki, do których odwołuje się strona: `style.css`, `js/*.js`, `manifest.webmanifest` i ikony z `icons/` (te, których używają `index.html` i manifest). Nie publikuj `sw.js`: bez niego service worker się nie rejestruje, więc podgląd zawsze pokazuje najnowszą wersję. Nowy plik gry trzeba dopisać do `files`.
+  - Podgląd ma osobny zapis gry (inna domena), nie da się go zainstalować i nie działa offline. Przy linku napisz krótko, co warto sprawdzić (np. które opcje włączyć w menu).
 
 ## Architektura
 | Plik | Rola |
