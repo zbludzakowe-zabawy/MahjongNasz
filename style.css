@@ -166,18 +166,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .tile.starred .star { display: block; }
 .tile.newstar .star { animation: pop .6s ease; }
 
-/* kafelek ×3 – znaczek w lewym górnym rogu */
+/* kafelek ×3 – znaczek w lewym górnym rogu, w całości na kafelku */
 .tile .bonus {
-  position: absolute; top: -9%; left: -9%;
-  min-width: 46%; padding: 0 6%; height: 30%;
-  display: none; place-items: center; pointer-events: none;
+  position: absolute; top: 4%; left: 6%;
+  box-sizing: border-box; max-width: 88%; height: 22%; padding: 0 .35em;
+  display: none; place-items: center; pointer-events: none; white-space: nowrap;
   border-radius: 999px; border: 1.5px solid #fff;
   background: linear-gradient(150deg, #b05cff, #6a1fd1);
-  color: #fff; font-weight: 800; font-size: calc(var(--tw, 40px) * .26); line-height: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+  color: #fff; font-weight: 800; font-size: calc(var(--tw, 40px) * .24); line-height: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .45);
 }
 .tile.bonused .bonus { display: grid; }
-.tile.intray .bonus { font-size: 11px; }
 .tile.hidden .bonus { visibility: hidden; }
 /* para zbierana automatycznie po kafelku ×3 */
 .tile.autopick {
