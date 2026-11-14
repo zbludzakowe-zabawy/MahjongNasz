@@ -325,13 +325,8 @@
         .forEach((t) => (t.faceDown = true));
     }
 
-    // kafelki ×3 – najpierw spośród odkrytych
-    if (settings.bonus) {
-      const n = Math.max(1, Math.round(tiles.length / BONUS_EVERY));
-      const open = shuffle(tiles.filter((t) => !t.faceDown));
-      const closed = shuffle(tiles.filter((t) => t.faceDown));
-      open.concat(closed).slice(0, n).forEach((t) => (t.bonus = true));
-    }
+    // kafelki ×3
+    if (settings.bonus) placeBonus(tiles, Math.max(1, Math.round(tiles.length / BONUS_EVERY)));
 
     // gwiazdki
     if (v.stars) {
@@ -498,6 +493,38 @@
     const bonus = (a.bonus ? 1 : 0) + (b.bonus ? 1 : 0);
     if (bonus) startAuto(bonus * BONUS_PAIRS);
     afterMove();
+  }
+
+  // ---------- kafelek ×3 ----------
+  // Rozmieszczenie: schowane (przykryte innymi kafelkami, najchętniej głęboko,
+  // nie rewersem do góry) i rozłożone po całej planszy – każdy kolejny jak
+  // najdalej od już wybranych.
+  function placeBonus(tiles, n) {
+    const hiddenOk = tiles.filter((t) => t.above.length > 0 && !t.faceDown);
+    const pool = hiddenOk.length >= n ? hiddenOk : tiles.filter((t) => !t.faceDown);
+    const maxZ = Math.max(...pool.map((t) => t.z));
+    // głębiej leżące kafelki mają większą szansę
+    const chosen = [];
+    for (let k = 0; k < n && chosen.length < pool.length; k++) {
+      const rest = pool.filter((t) => !chosen.includes(t));
+      let cand;
+      if (!chosen.length) {
+        cand = rest;
+      } else {
+        const dist = (t) => Math.min(...chosen.map((c) => Math.hypot(c.x - t.x, (c.y - t.y) * 1.3)));
+        const far = Math.max(...rest.map(dist));
+        cand = rest.filter((t) => dist(t) >= far * 0.75);
+      }
+      const weights = cand.map((t) => 1 + (maxZ - t.z));
+      let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+      let pickT = cand[cand.length - 1];
+      for (let i = 0; i < cand.length; i++) {
+        r -= weights[i];
+        if (r <= 0) { pickT = cand[i]; break; }
+      }
+      chosen.push(pickT);
+    }
+    chosen.forEach((t) => (t.bonus = true));
   }
 
   // ---------- kafelek ×3: automatyczne zbieranie par ----------
@@ -855,9 +882,9 @@
   function showWinModal(kind) {
     if (!S || !S.over) return;
     const title = kind === 'stars' ? '⭐ Gwiezdne zwycięstwo! ⭐'
-      : kind === 'kinds' ? 'Brawo! Masz każdy rodzaj!' : 'Brawo! Plansza oczyszczona!';
+      : kind === 'kinds' ? 'Brawo! Masz wszystkie symbole!' : 'Brawo! Plansza oczyszczona!';
     const msg = kind === 'stars' ? 'Wszystkie pozostałe kafelki mają gwiazdki.'
-      : kind === 'kinds' ? `Zebrano parę każdego z ${S.kindsTotal} rodzajów obrazków.` : 'Zebrano wszystkie kafelki.';
+      : kind === 'kinds' ? `Zebrano parę każdego z ${S.kindsTotal} symboli.` : 'Zebrano wszystkie kafelki.';
     showModal('#endModal', {
       title,
       body: `<p>${msg}</p>${kind === 'stars' ? starLegend() : ''}<p>Poziom ${S.level} · czas ${fmtTime(S.elapsed)}</p>`
