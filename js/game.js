@@ -12,9 +12,9 @@
   // Tryb „zmienny”: z każdym poziomem przybywa zakrytych kafelków (2, 4, 6…)
   const VARIABLE_HIDDEN_STEP = 2;
   const VARIABLE_HIDDEN_MAX = 30;
-  // Kafelek ×3: po zebraniu pary z takim kafelkiem gra sama zbiera kolejne pary.
-  // Ile kafelków przypada na jeden kafelek ×3 (co najmniej jeden na planszy).
-  const BONUS_RATE = { none: 0, rare: 30, often: 20 };
+  // Kafelek specjalny ×3: po zebraniu pary z takim kafelkiem gra sama zbiera kolejne pary.
+  // Średnio jeden na tyle kafelków (co najmniej jeden na planszy).
+  const BONUS_EVERY = 25;
   const BONUS_PAIRS = 3;
 
   // Poziom trudności (1-5) działa niezależnie od pozostałych opcji:
@@ -57,7 +57,7 @@
 
   const DEFAULTS = {
     v: 2, layout: null, tileset: 'music', hidden: 'none', stars: false, dim: false, difficulty: 3, device: null,
-    mode: 'fixed', bonus: 'rare', goal: 'all',
+    mode: 'fixed', bonus: true, goal: 'all',
     layoutUse: {}, tilesetUse: {},
   };
   const settings = loadSettings();
@@ -89,6 +89,8 @@
       const s = JSON.parse(localStorage.getItem('mahjongnasz-settings') || '{}');
       // wersja 1 zapisywała domyślny „Klasyczny” – od wersji 2 domyślna jest „Muzyka”
       if (!s.v && s.tileset === 'classic') delete s.tileset;
+      // wcześniej kafelki ×3 miały trzy poziomy: brak / rzadko / częściej
+      if (typeof s.bonus === 'string') s.bonus = s.bonus !== 'none';
       return { ...DEFAULTS, ...s, v: DEFAULTS.v };
     } catch (e) {
       return { ...DEFAULTS };
@@ -324,9 +326,8 @@
     }
 
     // kafelki ×3 – najpierw spośród odkrytych
-    const rate = BONUS_RATE[settings.bonus] || 0;
-    if (rate) {
-      const n = Math.max(1, Math.floor(tiles.length / rate));
+    if (settings.bonus) {
+      const n = Math.max(1, Math.round(tiles.length / BONUS_EVERY));
       const open = shuffle(tiles.filter((t) => !t.faceDown));
       const closed = shuffle(tiles.filter((t) => t.faceDown));
       open.concat(closed).slice(0, n).forEach((t) => (t.bonus = true));
@@ -1262,7 +1263,6 @@
   function render() {
     if (!S) return;
     const sel = S.selected !== null ? S.tiles[S.selected] : null;
-    const kinds = S.goal === 'kinds' ? doneKinds() : null;
     const auto = S.auto || [];
     S.tiles.forEach((t, i) => {
       const el = tileEls[i];
@@ -1278,7 +1278,6 @@
       c.toggle('newstar', S.newStars.includes(t.id));
       c.toggle('bonused', !!t.bonus);
       c.toggle('autopick', auto.includes(t.id));
-      c.toggle('kind-done', !!(kinds && kinds.has(t.face)) && isRevealed(t));
       if (!auto.includes(t.id) && el.style.zIndex === '150000') el.style.zIndex = String(t.z * 10000 + t.y * 100 + t.x + 10);
       c.toggle('glow', !!(S.diff.glow && sel && free && isRevealed(t) && t.id !== sel.id && t.face === sel.face));
     });
@@ -1306,7 +1305,6 @@
         el.classList.toggle('starred', t.star);
         el.classList.toggle('bonused', !!t.bonus);
         el.classList.toggle('autopick', (S.auto || []).includes(id));
-        el.classList.toggle('kind-done', !!(S.goal === 'kinds' && doneKinds().has(t.face)));
         el.classList.toggle('glow', !!(S.diff.glow && sel && id !== sel.id && t.face === sel.face));
         el.addEventListener('click', () => clickTile(t));
         slot.appendChild(el);
@@ -1464,9 +1462,8 @@
         { v: true, label: 'Włączone' },
       ],
       bonus: [
-        { v: 'none', label: 'Brak' },
-        { v: 'rare', label: 'Rzadko', sub: `1 na ${BONUS_RATE.rare} kafelków` },
-        { v: 'often', label: 'Częściej', sub: `1 na ${BONUS_RATE.often} kafelków` },
+        { v: false, label: 'Wyłączone' },
+        { v: true, label: 'Włączone', sub: `ok. 1 na ${BONUS_EVERY} kafelków` },
       ],
       goal: [
         { v: 'all', label: 'Wszystkie kafelki', sub: 'oczyść całą planszę' },
