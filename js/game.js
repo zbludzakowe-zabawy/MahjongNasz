@@ -1549,7 +1549,29 @@
     $('#menuClose').hidden = !S || S.over;
   }
 
+  // ---------- udostępnianie gry ----------
+  // Zawsze adres opublikowanej gry (nie bieżącej strony – podgląd działa pod innym adresem).
+  const SHARE_URL = 'https://zbludzakowe-zabawy.github.io/MahjongNasz/';
+  async function shareGame() {
+    const data = { title: 'Mahjong Nasz', text: 'Zagraj ze mną w Mahjong Nasz – pasjans z kafelkami, działa też bez internetu!', url: SHARE_URL };
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // gracz zamknął okno udostępniania
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(SHARE_URL);
+      toast('Skopiowano link do gry – wklej go w wiadomości', 3500);
+    } catch (e) {
+      toast(`Adres gry: ${SHARE_URL}`, 6000);
+    }
+  }
+
   // ---------- zdarzenia ----------
+  document.querySelectorAll('[data-share]').forEach((b) => b.addEventListener('click', shareGame));
   $('#btn-hint').addEventListener('click', useHint);
   $('#btn-undo').addEventListener('click', useUndo);
   $('#btn-shuffle').addEventListener('click', useShuffle);
