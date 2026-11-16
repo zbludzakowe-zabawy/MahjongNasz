@@ -298,6 +298,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn[hidden] { display: none; }
 
+/* udostępnianie gry (menu i pomoc) */
+.share-box {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px;
+  margin-top: 16px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1);
+}
+.share-text { color: var(--muted); font-size: .92rem; line-height: 1.45; min-width: 0; }
+.share-url { color: var(--accent); font-weight: 600; overflow-wrap: anywhere; }
+
 .setting { margin-top: 14px; flex: 1; min-width: 200px; }
 .setting h3 { margin: 0 0 8px; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .setting-row { display: flex; gap: 16px; flex-wrap: wrap; }
