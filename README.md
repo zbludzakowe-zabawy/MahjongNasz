@@ -12,7 +12,7 @@ Gra jest aplikacją PWA: działa bez internetu i można ją zainstalować na ekr
 - **iPhone / iPad (Safari):** baner podpowiada: **Udostępnij** → **Do ekranu początkowego**.
 - **Komputer (Chrome, Edge):** ikona instalacji na pasku adresu.
 
-**Udostępnianie:** w menu (☰) i w pomocy (?) jest adres gry i przycisk **📤 Udostępnij grę**. Na telefonie otwiera on okno udostępniania (SMS, komunikatory, e-mail) z gotowym linkiem, a na komputerze kopiuje link do schowka. Każda osoba ma na swoim urządzeniu własne ustawienia i własny zapis gry.
+**Udostępnianie:** w menu (☰) i w pomocy (?) jest przycisk **📤 Udostępnij grę**. Na telefonie otwiera on okno udostępniania (SMS, komunikatory, e-mail, a także „Kopiuj”, żeby wkleić link gdzie indziej) z gotowym linkiem, a na komputerze kopiuje link do schowka. Każda osoba ma na swoim urządzeniu własne ustawienia i własny zapis gry.
 
 Bieżąca partia zapisuje się po każdym ruchu, więc wraca po zamknięciu aplikacji. Po opublikowaniu nowej wersji gra pokazuje komunikat **Dostępna nowa wersja**; po stuknięciu *Odśwież* partia jest zachowana.
 
