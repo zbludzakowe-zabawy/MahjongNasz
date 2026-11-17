@@ -63,7 +63,7 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 - Każdy zestaw ma co najmniej 36 różnych obrazków (przy trudności 5 każdy obrazek ma w miarę możliwości tylko jedną parę).
 
 ## PWA i ikony
-- Udostępnianie: w zainstalowanej aplikacji nie widać paska adresu, więc adres gry i przycisk „📤 Udostępnij grę” (`[data-share]` → `shareGame()` w `game.js`) są w menu i w pomocy (`.share-box` w `index.html`). Udostępniany jest zawsze stały `SHARE_URL` (adres na GitHub Pages), nie `location.href`, bo podgląd działa pod innym adresem. Najpierw `navigator.share` (telefon), potem `navigator.clipboard` (komputer), a na końcu komunikat z adresem.
+- Udostępnianie: w zainstalowanej aplikacji nie widać paska adresu, więc przycisk „📤 Udostępnij grę” (`[data-share]` → `shareGame()` w `game.js`) jest w menu i w pomocy (`.share-box` w `index.html`). Sam przycisk, bez napisu z adresem (decyzja właściciela repozytorium – adres można skopiować w oknie udostępniania). Udostępniany jest zawsze stały `SHARE_URL` (adres na GitHub Pages), nie `location.href`, bo podgląd działa pod innym adresem. Najpierw `navigator.share` (telefon), potem `navigator.clipboard` (komputer), a na końcu komunikat z adresem.
 - Przepis: skill „pwa-na-telefon”. Nowa wersja czeka na „Odśwież”, a partia zostaje zachowana.
 - Zmiana ikony: telefony trzymają stare ikony w pamięci, więc nowe pliki dostają nowe nazwy (`-v2`, `-v3`…). Trzeba wtedy poprawić `manifest.webmanifest`, `index.html` i `ASSETS` w `sw.js`.
 - `ASSETS` w źródłowym `sw.js` ma być poprawnym JS i zawierać każdy plik `js/*.js` (przy publikacji i tak nadpisuje go `build-sw.mjs`).
