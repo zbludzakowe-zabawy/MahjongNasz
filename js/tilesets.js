@@ -645,14 +645,20 @@ const TileSets = (() => {
   ];
   const mountainFaces = MOUNTAIN_SVG.map((draw) => () => wrap(draw()));
 
-  // ---- Ptakostki: 9 ptaków z rysunków + 6 wymyślonych w tym stylu (czarna kreska) × 4 kolory ----
+  // ---- Ptakostki: 9 ptaków z rysunków + 6 wymyślonych w tym stylu (czarna kreska), każdy w 3–4 kolorach ----
   const PK = '#1b1b1b';
   const pk = (w) => `stroke="${PK}" stroke-width="${w || 2}" stroke-linejoin="round" stroke-linecap="round"`;
   const pl = (d, w) => `<path d="${d}" fill="none" ${pk(w)}/>`;
   const pf = (d, fill, w) => `<path d="${d}" fill="${fill}" ${pk(w)}/>`;
   // trzy palce na końcu nogi (x, y) – w dół
   const toes = (x, y, k) => pl(`M${x} ${y} l${-2.2 * (k || 1)} ${2.4 * (k || 1)} M${x} ${y} v${2.8 * (k || 1)} M${x} ${y} l${2.2 * (k || 1)} ${2.4 * (k || 1)}`, 1.4);
-  const PTAK_COLORS = ['#7fd8e6', '#ffd54a', '#ff9ec0', '#a4e07f'];
+  // paleta i zestaw kolorów każdego ptaka (litery z PTAK_PALETA, w kolejności PTAKI)
+  const PTAK_PALETA = {
+    R: '#ff6b5b', O: '#ff9440', Y: '#ffd23f', L: '#c4e24a', G: '#5fcf6a',
+    T: '#2ec4b6', C: '#7fd8e6', B: '#4a90ff', P: '#b48cf2', K: '#ff8fc0',
+  };
+  const PTAK_COLORS = ['RYTP', 'BOG', 'YKCO', 'GPR', 'YCKL', 'COPG', 'RTY', 'OBKL',
+    'PGY', 'OBLK', 'CRP', 'GYKB', 'KTO', 'LPCR', 'YRTB'];
   const PTAKI = [
     // długonogi z hakowatym dziobem
     (c) => pf('M27 13 L27 46 L41 46.5 L41 39.5 L33 39 L33 10.5 Z', c) +
@@ -821,7 +827,11 @@ const TileSets = (() => {
       pl('M27 66 V72 M41 66 V72', 1.8) + pf('M22.6 71.8 H30.6 V75 H22.6 Z', c, 1.6) + pf('M36.6 71.8 H44.6 V75 H36.6 Z', c, 1.6),
   ];
   const ptakFaces = [];
-  PTAKI.forEach((draw) => PTAK_COLORS.forEach((c) => ptakFaces.push(() => wrap(draw(c)))));
+  const ptakGroup = []; // numer ptaka dla każdego obrazka
+  PTAKI.forEach((draw, bi) => [...PTAK_COLORS[bi]].forEach((k) => {
+    ptakFaces.push(() => wrap(draw(PTAK_PALETA[k])));
+    ptakGroup.push(bi);
+  }));
 
   const list = [
     classic,
@@ -841,7 +851,7 @@ const TileSets = (() => {
     facesSet('minecraft', 'Minecraft (piksele)', pixelFaces, [0, 19, 23]),
     facesSet('cats', 'Kotki', catFaces, [0, 9, 26]),
     facesSet('mountains', 'Góry i wspinaczka', mountainFaces, [0, 19, 12]),
-    facesSet('ptakostki', 'Ptakostki', ptakFaces, [0, 13, 22], (i) => Math.floor(i / PTAK_COLORS.length)),
+    facesSet('ptakostki', 'Ptakostki', ptakFaces, [0, 2, 5].map((bi) => ptakGroup.indexOf(bi)), (i) => ptakGroup[i]),
   ];
 
   return {
