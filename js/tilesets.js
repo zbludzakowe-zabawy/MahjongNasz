@@ -676,10 +676,12 @@ const TileSets = (() => {
       pf('M23.5 69.6 L21.4 73 L26.6 73.4 Z', PK, 1) + pf('M32.5 70.2 L30.4 73.6 L35.6 74 Z', PK, 1),
     // kurka w kropki z ogonem z kostek
     (c) => {
-      let s = pf('M17.5 22 L21 16.8 L26 15.4 L29 13.4 L30.6 15.6 L28.6 18.6 Z', '#fff', 1.6) +
-        pf('M13.4 21.6 L20 19.6 L21 25.2 L14.2 25.4 Z', '#fff', 1.6) +
-        pf('M20 19 L29.4 17.6 L31 34 L21 34 Z', '#d9d9d9') +
-        `<rect x="22.6" y="21" width="3.4" height="3.4" fill="${PK}"/><rect x="23.3" y="21.6" width="1" height="1" fill="#fff"/>` +
+      // dumna głowa: szyja równo z lewą ścianką, dziób w górę, czerwony grzebień i podgardle
+      let s = pf('M14 34 L16.4 13.6 L28.4 12.8 L27 34 Z', '#d9d9d9') +
+        pf('M16.6 21.4 Q12.6 23.4 14 27 Q16.4 27.8 16 23.6', '#e53935', 1.4) +
+        pf('M16.8 15.4 L7.6 12.4 L16.2 20.6 Z', c, 1.6) +
+        pf('M16.8 13.6 Q15.6 8.8 19.4 9.4 Q19.4 5 23.2 6.6 Q24.6 3 27.8 5.8 Q31.4 7.6 28.4 12.8 Z', '#e53935', 1.6) +
+        `<rect x="19.8" y="15.6" width="3.6" height="3.6" fill="${PK}"/><rect x="20.6" y="16.2" width="1.1" height="1.1" fill="#fff"/>` +
         pf('M14 33.6 L45 33 L44.6 63.6 L13.4 63 Z', c);
       [[18.5, 38.5, 6], [32, 38.3, 6], [25.8, 46, 4.6], [18.6, 52.8, 5.6], [31.4, 53.4, 5.6]]
         .forEach(([x, y, w]) => (s += `<rect x="${x}" y="${y}" width="${w}" height="${w * 0.9}" rx=".7" fill="${PK}"/>`));
