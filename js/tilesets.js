@@ -642,7 +642,7 @@ const TileSets = (() => {
   ];
   const mountainFaces = MOUNTAIN_SVG.map((draw) => () => wrap(draw()));
 
-  // ---- Ptakostki: 9 ptaków z rysunków (czarna kreska) × 4 kolory ----
+  // ---- Ptakostki: 9 ptaków z rysunków + 6 wymyślonych w tym stylu (czarna kreska) × 4 kolory ----
   const PK = '#1b1b1b';
   const pk = (w) => `stroke="${PK}" stroke-width="${w || 2}" stroke-linejoin="round" stroke-linecap="round"`;
   const pl = (d, w) => `<path d="${d}" fill="none" ${pk(w)}/>`;
@@ -760,7 +760,7 @@ const TileSets = (() => {
       pl('M28.6 52 V66 M37.2 52 V66', 2) +
       pf('M28.6 65 L24.6 70.6 L27.8 69 L28.6 71 L29.6 69 L32.6 70.6 Z', PK, 1) +
       pf('M37.2 65 L33.2 70.6 L36.4 69 L37.2 71 L38.2 69 L41.2 70.6 Z', PK, 1),
-    // ---- propozycje: ptaki wymyślone w tym samym stylu ----
+    // ---- ptaki wymyślone w tym samym stylu ----
     // sowa z uszami
     (c) => pf('M15 23 L13 11 L24 22 Z', c, 1.8) + pf('M45 23 L47 11 L36 22 Z', c, 1.8) +
       pf('M15 22 L45 22 L45 62 L15 62 Z', c) +
@@ -806,18 +806,6 @@ const TileSets = (() => {
       pf('M27.6 42.4 L32.4 42.4 L30 46.4 Z', c, 1.4) +
       pl('M49 40 V70 M49 40 Q49 35.4 53 36.4', 1.8) + pl('M44 46 L49 47', 1.6) +
       pl('M24 62 V67 M34 62 V67', 1.6) + toes(24, 67, .9) + toes(34, 67, .9),
-    // pelikan: długi dziób z workiem jak wiaderko, w środku fala i ryba
-    (c) => pf('M28 34 L48 34 L48 63 L28 63 Z', c) +
-      pl('M33 42 V50 H44 L44.6 46', 1.8) +
-      pf('M30 28 L30 34.4 L37 34.4 L37 28 Z', c, 1.8) +
-      pf('M26 14 L40 14 L40 28.6 L26 28.6 Z', c) +
-      pl('M33 14 L35.4 8.4 L38.6 9.6', 1.5) +
-      `<circle cx="33.4" cy="19" r="1.5" fill="${PK}"/>` +
-      pf('M26.4 19.4 L3.6 21 L3.8 23.8 L26.4 23.4 Z', c, 1.6) +
-      pf('M5 23.8 L25.6 23.4 L25 34 Q24.4 38.6 19.6 38.6 L10 38.6 Q5.4 38.6 5.2 34 Z', '#fff', 1.6) +
-      pl('M6.6 29 q2.3 -1.6 4.6 0 q2.3 1.6 4.6 0 q2.3 -1.6 4.6 0 q2 1.4 3.6 0.2', 1.1).replace(PK, '#2f8fe0') +
-      `<path d="M10 33.4 q4.4 -3 8.6 0 q-4.2 3 -8.6 0 Z M18.4 33.4 L21.4 31.2 L21.4 35.6 Z" fill="#2f8fe0" stroke="#145a9c" stroke-width=".8"/>` +
-      pl('M33 63 V69 M43 63 V69', 1.8) + pf('M28.6 68.8 H36.6 V72 H28.6 Z', c, 1.6) + pf('M38.6 68.8 H46.6 V72 H38.6 Z', c, 1.6),
     // pelikan łapiący rybę: dziób szeroko otwarty do góry, ryba spada
     (c) => `<path d="M17 4.6 q4 -3 8 0 q-4 3 -8 0 Z M24.8 4.6 L28 2.4 L28 6.8 Z" fill="#2f8fe0" stroke="#145a9c" stroke-width=".8"/>` +
       pl('M19.6 9 v1.6 M22.6 8.4 v1.6', 1.1).replace(PK, '#2f8fe0') +
