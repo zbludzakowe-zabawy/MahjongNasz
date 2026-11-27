@@ -742,8 +742,12 @@ const TileSets = (() => {
         s += pl(`M${x2.toFixed(1)} ${y2.toFixed(1)} l${(-1 + t).toFixed(1)} ${(13 - 7 * t).toFixed(1)}`, 1.3);
       }
       return s + pf('M21.6 30.4 L39.6 28.6 L41.4 48 L23.4 49.4 Z', c) +
-        `<rect x="25.4" y="33.4" width="2.6" height="2.6" fill="none" ${pk(1.1)}/><rect x="34.4" y="32.6" width="2.6" height="2.6" fill="none" ${pk(1.1)}/>` +
-        pf('M26.4 39.4 L35.4 38.8 L35.6 42 L26.6 42.6 Z', '#fff', 1.4) +
+        // wesoła mina: oczy z kropkami i szeroki uśmiech z zębami
+        `<rect x="25" y="32.8" width="3.2" height="3" fill="#fff" ${pk(1.1)} transform="rotate(-8 26.6 34.3)"/>` +
+        `<rect x="34" y="32" width="3.2" height="3" fill="#fff" ${pk(1.1)} transform="rotate(-8 35.6 33.5)"/>` +
+        `<circle cx="26.8" cy="34.4" r="1.05" fill="${PK}"/><circle cx="35.8" cy="33.6" r="1.05" fill="${PK}"/>` +
+        pf('M25.2 38.6 L37 37.6 Q37.2 44.6 31.4 45 Q25.6 45.2 25.2 38.6 Z', '#fff', 1.5) +
+        pl('M25.5 40.8 L36.9 39.9', 1.1) +
         pl('M29.4 49 V55 M37.2 48.4 V53.6', 1.4) + toes(29.4, 55, .7) + toes(37.2, 53.6, .7);
     },
     // w opasce, na długich nogach
