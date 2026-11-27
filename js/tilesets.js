@@ -746,8 +746,8 @@ const TileSets = (() => {
         `<rect x="25" y="32.8" width="3.2" height="3" fill="#fff" ${pk(1.1)} transform="rotate(-8 26.6 34.3)"/>` +
         `<rect x="34" y="32" width="3.2" height="3" fill="#fff" ${pk(1.1)} transform="rotate(-8 35.6 33.5)"/>` +
         `<circle cx="26.8" cy="34.4" r="1.05" fill="${PK}"/><circle cx="35.8" cy="33.6" r="1.05" fill="${PK}"/>` +
-        pf('M25.2 38.6 L37 37.6 Q37.2 44.6 31.4 45 Q25.6 45.2 25.2 38.6 Z', '#fff', 1.5) +
-        pl('M25.5 40.8 L36.9 39.9', 1.1) +
+        pf('M25.2 38.6 L37 37.6 Q37.1 42.8 31.4 43.2 Q25.6 43.4 25.2 38.6 Z', '#fff', 1.5) +
+        pl('M25.4 40.3 L37 39.4', 1.1) +
         pl('M29.4 49 V55 M37.2 48.4 V53.6', 1.4) + toes(29.4, 55, .7) + toes(37.2, 53.6, .7);
     },
     // w opasce, na długich nogach
