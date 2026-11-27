@@ -21,13 +21,16 @@
   //  ratio    – ile par przypada na jeden rodzaj obrazka (więcej = łatwiej)
   //  glow     – podświetlanie pasujących kafelków po zaznaczeniu
   //  solvable – gwarancja, że rozdanie da się rozwiązać
-  // Przy ratio 1 każdy obrazek występuje (w miarę możliwości) tylko w jednej parze.
+  //  traps    – jaka część obrazków (przy ratio 2) dostaje „pułapkę”: dwie pary
+  //             ułożone tak, że źle dobrana para blokuje grę (patrz trapPairs)
+  // Trudność bierze się z wyboru, którą parę zebrać najpierw, a nie z liczby
+  // obrazków – przy jednej parze na obrazek każda znaleziona para jest dobra.
   const DIFFICULTY = {
-    1: { ratio: 4, glow: true, solvable: true, label: 'Bardzo łatwy' },
-    2: { ratio: 3, glow: false, solvable: true, label: 'Łatwy' },
-    3: { ratio: 2, glow: false, solvable: true, label: 'Średni' },
-    4: { ratio: 1.5, glow: false, solvable: true, label: 'Trudny' },
-    5: { ratio: 1, glow: false, solvable: true, label: 'Ekspert' },
+    1: { ratio: 3, traps: 0, glow: true, solvable: true, label: 'Bardzo łatwy' },
+    2: { ratio: 3, traps: 0, glow: false, solvable: true, label: 'Łatwy' },
+    3: { ratio: 2, traps: 0.25, glow: false, solvable: true, label: 'Średni' },
+    4: { ratio: 2, traps: 0.5, glow: false, solvable: true, label: 'Trudny' },
+    5: { ratio: 2, traps: 1, glow: false, solvable: true, label: 'Ekspert' },
   };
 
   // Domyślny układ dla każdego rodzaju urządzenia
@@ -263,6 +266,154 @@
     return null;
   }
 
+  // Łączy pary z kolejności rozwiązania w dwójki (jeden obrazek = 2 pary).
+  // Pułapka: pary i < j, gdzie przed zdjęciem pary i jeden kafelek pary j (c)
+  // jest już wolny, a drugi (d) leży pod kafelkiem pary i. Wolne są wtedy
+  // 3 takie same kafelki; kto sparuje c z niewłaściwym kafelkiem pary i,
+  // zostawia kafelek leżący na d – i d nie ma już z kim się sparować.
+  // frac – jaka część dwójek ma być pułapkami (o ile układ na to pozwala).
+  function trapPairs(tiles, pairs, frac) {
+    const P = pairs.length;
+    const used = new Uint8Array(P);
+    const groups = [];
+    if (frac > 0) {
+      const present = new Uint8Array(tiles.length).fill(1);
+      const has = (id) => present[id] === 1;
+      const freeAt = []; // wolne kafelki tuż przed zdjęciem pary i
+      for (let i = 0; i < P; i++) {
+        freeAt.push(new Set(tiles.filter((t) => present[t.id] && freeWith(t, has)).map((t) => t.id)));
+        present[pairs[i][0].id] = present[pairs[i][1].id] = 0;
+      }
+      const trap = (i, j) => {
+        const [a, b] = pairs[i];
+        return [[pairs[j][0], pairs[j][1]], [pairs[j][1], pairs[j][0]]].some(([c, d]) =>
+          freeAt[i].has(c.id) && !freeAt[i].has(d.id) && (d.above.includes(a.id) || d.above.includes(b.id)));
+      };
+      const want = Math.round(frac * Math.floor(P / 2));
+      for (const i of shuffle([...Array(P).keys()])) {
+        if (groups.length >= want) break;
+        if (used[i]) continue;
+        const js = [];
+        for (let j = i + 1; j < P; j++) if (!used[j] && trap(i, j)) js.push(j);
+        if (!js.length) continue;
+        const j = pick(js);
+        used[i] = used[j] = 1;
+        groups.push([i, j]);
+      }
+    }
+    const traps = groups.length;
+    const rest = shuffle([...Array(P).keys()].filter((i) => !used[i]));
+    for (let k = 0; k < rest.length; k += 2) groups.push(rest.slice(k, k + 2));
+    groups.traps = traps;
+    return groups;
+  }
+
+  // Szuka kolejności zbierania par od bieżącego stanu (stos + schowek), po której
+  // da się zebrać wszystko. Zwraca listę par [id, id] albo null.
+  // hint – poprzednie rozwiązanie: jego pary są sprawdzane najpierw.
+  function solveFrom(maxNodes, hint) {
+    const tiles = S.tiles;
+    const n = tiles.length;
+    const present = new Uint8Array(n);
+    tiles.forEach((t) => (present[t.id] = t.loc === 'gone' ? 0 : 1));
+    const has = (id) => present[id] === 1 && tiles[id].loc === 'board';
+    const avail = (t) => present[t.id] && (t.loc === 'tray' || freeWith(t, has));
+    // under[a] – kafelki, które leżą (pośrednio) pod a: a musi zniknąć wcześniej
+    const under = tiles.map(() => new Set());
+    const byZ = tiles.filter((t) => t.loc === 'board').sort((x, y) => x.z - y.z);
+    for (const t of byZ) {
+      for (const id of t.above) {
+        if (tiles[id].loc !== 'board') continue;
+        under[id].add(t.id);
+        under[t.id].forEach((u) => under[id].add(u));
+      }
+    }
+    const good = new Set((hint || []).map(([i, j]) => (i < j ? i + '-' + j : j + '-' + i)));
+    const isGood = (a, b) => good.has(a.id < b.id ? a.id + '-' + b.id : b.id + '-' + a.id);
+    const seen = new Set();
+    let nodes = 0;
+    const path = [];
+    // ślepy zaułek: dwa ostatnie kafelki obrazka, z których jeden leży na drugim
+    const dead = (rest) => {
+      for (const list of rest.values()) {
+        if (list.length === 2 && (under[list[0].id].has(list[1].id) || under[list[1].id].has(list[0].id))) return true;
+      }
+      return false;
+    };
+    const go = (left) => {
+      if (left <= 1) return true;
+      if (++nodes > maxNodes) return false;
+      const key = present.join('');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      const rest = new Map();
+      for (const t of tiles) {
+        if (!present[t.id]) continue;
+        if (!rest.has(t.face)) rest.set(t.face, []);
+        rest.get(t.face).push(t);
+      }
+      if (dead(rest)) return false;
+      // ruch bezpieczny: wolne są wszystkie pozostałe kafelki obrazka (po zdjęciu
+      // dwóch pozostałe nadal są wolne). W innych przypadkach wybór ma znaczenie.
+      const safe = [];
+      const risky = [];
+      for (const list of rest.values()) {
+        const av = list.filter(avail);
+        if (av.length < 2) continue;
+        if (av.length === list.length) {
+          const g = av.find((a) => av.some((b) => b !== a && isGood(a, b)));
+          const a = g || av[0];
+          const b = av.find((x) => x !== a && (!g || isGood(a, x))) || av.find((x) => x !== a);
+          safe.push([a, b]);
+          break;
+        }
+        for (let x = 0; x < av.length; x++) for (let y = x + 1; y < av.length; y++) risky.push([av[x], av[y]]);
+      }
+      const moves = safe.length ? safe : shuffle(risky).sort((p, q) => isGood(q[0], q[1]) - isGood(p[0], p[1]));
+      for (const [a, b] of moves) {
+        present[a.id] = present[b.id] = 0;
+        path.push([a.id, b.id]);
+        if (go(left - 2)) return true;
+        path.pop();
+        present[a.id] = present[b.id] = 1;
+      }
+      return false;
+    };
+    return go(tiles.filter((t) => t.loc !== 'gone').length) ? path : null;
+  }
+
+  // Czy zapamiętane rozwiązanie da się jeszcze wykonać od bieżącego stanu?
+  function solutionValid(sol) {
+    const tiles = S.tiles;
+    const rest = sol.filter(([i, j]) => tiles[i].loc !== 'gone' && tiles[j].loc !== 'gone');
+    const left = tiles.filter((t) => t.loc !== 'gone').length;
+    if (rest.length * 2 < left - 1) return null;
+    const present = new Uint8Array(tiles.length);
+    tiles.forEach((t) => (present[t.id] = t.loc === 'gone' ? 0 : 1));
+    const has = (id) => present[id] === 1 && tiles[id].loc === 'board';
+    const ok = (t) => t.loc === 'tray' || freeWith(t, has);
+    for (const [i, j] of rest) {
+      const a = tiles[i];
+      const b = tiles[j];
+      if (a.face !== b.face || !ok(a) || !ok(b)) return null;
+      present[i] = present[j] = 0;
+    }
+    return rest;
+  }
+
+  // Aktualne rozwiązanie (poprawione, jeśli gracz zebrał pary po swojemu
+  // albo plansza została zmiksowana); null, gdy nie da się już wygrać parami.
+  function currentSolution() {
+    const valid = S.solution && solutionValid(S.solution);
+    if (valid) return valid;
+    // ten sam stan sprawdzany drugi raz – wynik już znany (brak rozwiązania)
+    const key = S.tiles.map((t) => (t.loc === 'gone' ? 0 : t.face + 1)).join(',');
+    if (!S.solution && S.noSolutionKey === key) return null;
+    S.solution = solveFrom(100000, S.solution);
+    S.noSolutionKey = S.solution ? null : key;
+    return S.solution;
+  }
+
   // ---------- nowa gra ----------
   const variableHidden = (level) => Math.min(VARIABLE_HIDDEN_MAX, VARIABLE_HIDDEN_STEP * level);
 
@@ -306,13 +457,26 @@
 
     // przydział obrazków
     const P = tiles.length / 2;
-    const T = Math.max(2, Math.min(tileset.size, Math.ceil(P / diff.ratio)));
-    const types = pickTypes(tileset, T);
-    const pairFaces = shuffle(Array.from({ length: P }, (_, i) => types[i % T]));
+    let trapsN = 0;
     const order = diff.solvable ? solvableOrder(tiles, tiles) : null;
-    if (order) {
+    if (order && diff.ratio === 2) {
+      // każdy obrazek w 2 parach; część z nich to pułapki
+      const groups = trapPairs(tiles, order.pairs, diff.traps);
+      trapsN = groups.traps;
+      const types = pickTypes(tileset, Math.min(tileset.size, groups.length));
+      shuffle(groups).forEach((g, k) => g.forEach((i) => {
+        const [a, b] = order.pairs[i];
+        a.face = b.face = types[k % types.length];
+      }));
+    } else if (order) {
+      const T = Math.max(2, Math.min(tileset.size, Math.ceil(P / diff.ratio)));
+      const types = pickTypes(tileset, T);
+      const pairFaces = shuffle(Array.from({ length: P }, (_, i) => types[i % T]));
       order.pairs.forEach(([a, b], i) => (a.face = b.face = pairFaces[i]));
     } else {
+      const T = Math.max(2, Math.min(tileset.size, Math.ceil(P / diff.ratio)));
+      const types = pickTypes(tileset, T);
+      const pairFaces = shuffle(Array.from({ length: P }, (_, i) => types[i % T]));
       const sh = shuffle(tiles.slice());
       for (let i = 0; i < P; i++) sh[2 * i].face = sh[2 * i + 1].face = pairFaces[i];
     }
@@ -336,6 +500,7 @@
     S = {
       tiles, tileset, diff, diffKey: DIFFICULTY[settings.difficulty] ? settings.difficulty : 3, layout,
       solution: order ? order.pairs.map(([a, b]) => [a.id, b.id]) : null,
+      trapsN, // liczba pułapek w rozdaniu (do testów)
       tray: Array(SLOTS).fill(null),
       selected: null,
       helps: { hint: HELPS_PER_LEVEL, undo: HELPS_PER_LEVEL, shuffle: HELPS_PER_LEVEL },
@@ -546,13 +711,16 @@
   }
 
   // ---------- kafelek ×3: automatyczne zbieranie par ----------
-  // Para do zebrania: najpierw z zaplanowanego rozwiązania (zdjęcie jego pary
-  // wcześniej nie psuje reszty rozwiązania), potem dowolna dostępna.
+  // Para do zebrania: z aktualnego rozwiązania (currentSolution – poprawiane, gdy
+  // gracz zebrał pary po swojemu), więc seria ×3 nie wpada w pułapki; zdjęcie
+  // pary z rozwiązania wcześniej nie psuje jego reszty. Dowolna dostępna para
+  // tylko wtedy, gdy wygrać parami już się nie da.
   // Wolne kafelki rewersem do góry też się liczą – odwracają się na czas zbierania.
   function autoPair() {
     const ok = (t) => t.loc === 'tray' || isFree(t);
-    if (S.solution) {
-      for (const [i, j] of S.solution) {
+    const sol = currentSolution();
+    if (sol) {
+      for (const [i, j] of sol) {
         const a = S.tiles[i];
         const b = S.tiles[j];
         if (a.loc !== 'gone' && b.loc !== 'gone' && a.face === b.face && ok(a) && ok(b)) return [a, b];
@@ -685,7 +853,8 @@
       return toast('Brak dostępnych par – spróbuj miksowania');
     }
     S.helps.hint--;
-    S.hint = pair.map((t) => t.id);
+    // lupa pokazuje parę z rozwiązania (bezpieczną), a gdy go nie ma – dowolną
+    S.hint = (autoPair() || pair).map((t) => t.id);
     render();
     clearTimeout(hintTimer);
     hintTimer = setTimeout(clearHint, 3500);
@@ -840,6 +1009,7 @@
       board.forEach((t, k) => assign(t, sh[k]));
     }
     S.history = []; // po miksowaniu nie cofamy wcześniejszych ruchów
+    S.solution = null; // obrazki się zmieniły – rozwiązanie policzy się od nowa
     render();
   }
 
@@ -1621,7 +1791,7 @@
   });
 
   // uchwyt do testów automatycznych
-  window.__mahjong = { get state() { return S; }, settings, newGame, clickTile, clickSlot, findPair, isFree };
+  window.__mahjong = { get state() { return S; }, settings, newGame, clickTile, clickSlot, findPair, isFree, solveFrom, autoPair };
 
   // zapisz czas gry, gdy aplikacja schodzi do tła
   document.addEventListener('visibilitychange', () => {

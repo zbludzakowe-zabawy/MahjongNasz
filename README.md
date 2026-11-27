@@ -42,19 +42,21 @@ Zaznacz wolny kafelek i kliknij puste miejsce w schowku (albo kliknij kafelek dw
 - **Gwiazdki:** na starcie 4 kafelki mają gwiazdkę. Zebranie pary z 1 gwiazdką daje gwiazdki 2 kafelkom na stosie, a pary z 2 gwiazdkami – 4 kafelkom. Wygrywasz po oczyszczeniu planszy **albo** gdy wszystkie kafelki na stosie mają gwiazdki. Kafelki w schowku się nie liczą. Gwiezdne zwycięstwo kończy animacja: świetlista ścieżka przez miejsca, gdzie zebrano gwiazdki, z gwiazdką innego koloru i kształtu dla każdego piętra stosu, oraz deszcz migoczących gwiazdek. Zwycięstwo przez oczyszczenie planszy kończy wystrzał konfetti.
 - **Poziom trudności 1–5** działa niezależnie od pozostałych opcji:
 
-  | Poziom | Powtórzeń obrazka | Podświetlanie pasujących |
-  |---|---|---|
-  | 1 | ok. 8 | tak |
-  | 2 | ok. 6 | nie |
-  | 3 | ok. 4 | nie |
-  | 4 | ok. 3 | nie |
-  | 5 | 2 (jeśli zestaw na to pozwala) | nie |
+  | Poziom | Powtórzeń obrazka | Pułapki | Podświetlanie pasujących |
+  |---|---|---|---|
+  | 1 | ok. 6 | brak | tak |
+  | 2 | ok. 6 | brak | nie |
+  | 3 | 4 | kilka (co czwarty obrazek) | nie |
+  | 4 | 4 | sporo (co drugi obrazek) | nie |
+  | 5 | 4 | jak najwięcej | nie |
+
+  Trudność to przede wszystkim wybór, którą parę zebrać najpierw. **Pułapka** to obrazek, którego 4 kafelki leżą tak, że w pewnej chwili wolne są 3 z nich, a czwarty leży pod jednym z wolnych. Kto sparuje źle, zostawi kafelek przykrywający swojego jedynego partnera i (bez schowka, cofania albo miksowania) utknie. Rozdanie zawsze da się rozwiązać przy dobrym wyborze. Lupa pokazuje parę z rozwiązania, czyli bezpieczną.
 
   Każde rozdanie da się rozwiązać.
 - **Tryb gry:** *Stały* (każdy poziom według ustawień) albo *Zmienny* – po każdej wygranej następna plansza ma inny układ i inne obrazki, zakrytych kafelków przybywa (2 na pierwszym poziomie, potem 4, 6… do 30), a co jakiś czas (najpóźniej co 4 poziomy) gra zmienia się z gwiazdkami na bez gwiazdek i odwrotnie.
 - **Przyciemniaj niedostępne:** opcjonalne przyciemnianie zablokowanych kafelków (domyślnie wyłączone).
-- **Kafelki specjalne ×3:** włączone (domyślnie) albo wyłączone; średnio jeden na 25 kafelków, na każdej planszy co najmniej jeden. Są schowane pod innymi kafelkami (na starcie żaden nie jest wolny) i rozłożone po całej planszy, daleko od siebie. Taki kafelek ma w rogu fioletowy znaczek „×3”. Gdy gracz zbierze parę z takim kafelkiem, gra sama zbiera 3 kolejne dostępne pary (jeśli jest ich mniej – tyle, ile się da; zbiera też wolne kafelki rewersem do góry – odwracają się na chwilę i znikają). Widać to na planszy: każda para świeci na fioletowo, zlatuje się i znika w wirze. Jeśli w serii trafi się kolejny kafelek ×3, seria wydłuża się o 3 pary. Pary wybierane są tak, żeby plansza dalej dała się rozwiązać. Cofnięcie cofa całą serię naraz.
-- **Cel gry:** *Wszystkie kafelki* (oczyść planszę) albo *Każdy rodzaj* – wygrywasz („Brawo! Masz wszystkie symbole!”), gdy zbierzesz po jednej parze każdego rodzaju obrazka, nie trzeba zbierać wszystkich kafelków. Licznik **Rodzaje** pokazuje postęp; wygląd kafelków się nie zmienia. Na poziomie trudności 5 prawie każdy obrazek ma tylko jedną parę, więc ten cel niewiele różni się od oczyszczenia planszy.
+- **Kafelki specjalne ×3:** włączone (domyślnie) albo wyłączone; średnio jeden na 25 kafelków, na każdej planszy co najmniej jeden. Są schowane pod innymi kafelkami (na starcie żaden nie jest wolny) i rozłożone po całej planszy, daleko od siebie. Taki kafelek ma w rogu fioletowy znaczek „×3”. Gdy gracz zbierze parę z takim kafelkiem, gra sama zbiera 3 kolejne dostępne pary (jeśli jest ich mniej – tyle, ile się da; zbiera też wolne kafelki rewersem do góry – odwracają się na chwilę i znikają). Widać to na planszy: każda para świeci na fioletowo, zlatuje się i znika w wirze. Jeśli w serii trafi się kolejny kafelek ×3, seria wydłuża się o 3 pary. Pary wybierane są tak, żeby plansza dalej dała się rozwiązać – seria nie wpada w pułapki, także wtedy, gdy gracz wcześniej zebrał coś po swojemu. Cofnięcie cofa całą serię naraz.
+- **Cel gry:** *Wszystkie kafelki* (oczyść planszę) albo *Każdy rodzaj* – wygrywasz („Brawo! Masz wszystkie symbole!”), gdy zbierzesz po jednej parze każdego rodzaju obrazka, nie trzeba zbierać wszystkich kafelków. Licznik **Rodzaje** pokazuje postęp; wygląd kafelków się nie zmienia. Od poziomu trudności 3 każdy obrazek ma 2 pary, więc wystarczy zebrać mniej więcej połowę kafelków.
 
 ### Pomoce (po 2 na każdy poziom)
 - 🔍 **Lupa** – pokazuje parę, którą można zebrać.
