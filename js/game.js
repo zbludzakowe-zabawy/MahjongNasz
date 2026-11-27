@@ -307,7 +307,7 @@
     // przydział obrazków
     const P = tiles.length / 2;
     const T = Math.max(2, Math.min(tileset.size, Math.ceil(P / diff.ratio)));
-    const types = shuffle([...Array(tileset.size).keys()]).slice(0, T);
+    const types = pickTypes(tileset, T);
     const pairFaces = shuffle(Array.from({ length: P }, (_, i) => types[i % T]));
     const order = diff.solvable ? solvableOrder(tiles, tiles) : null;
     if (order) {
@@ -423,6 +423,24 @@
       S.selected = t.id;
     }
     render();
+  }
+
+  // T losowych rodzajów obrazków; gdy zestaw ma grupy (ten sam kształt w różnych
+  // kolorach), najpierw po jednym z każdej grupy, dopiero potem kolejne warianty
+  function pickTypes(tileset, T) {
+    const all = shuffle([...Array(tileset.size).keys()]);
+    if (tileset.group) {
+      const seen = new Map();
+      const rank = new Map();
+      for (const i of all) {
+        const g = tileset.group(i);
+        const r = seen.get(g) || 0;
+        seen.set(g, r + 1);
+        rank.set(i, r);
+      }
+      all.sort((a, b) => rank.get(a) - rank.get(b));
+    }
+    return all.slice(0, T);
   }
 
   function trayTwin(t) {
