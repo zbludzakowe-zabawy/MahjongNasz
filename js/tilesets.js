@@ -642,6 +642,120 @@ const TileSets = (() => {
   ];
   const mountainFaces = MOUNTAIN_SVG.map((draw) => () => wrap(draw()));
 
+  // ---- Ptakostki: 9 ptaków z rysunków (czarna kreska) × 4 kolory ----
+  const PK = '#1b1b1b';
+  const pk = (w) => `stroke="${PK}" stroke-width="${w || 2}" stroke-linejoin="round" stroke-linecap="round"`;
+  const pl = (d, w) => `<path d="${d}" fill="none" ${pk(w)}/>`;
+  const pf = (d, fill, w) => `<path d="${d}" fill="${fill}" ${pk(w)}/>`;
+  // trzy palce na końcu nogi (x, y) – w dół
+  const toes = (x, y, k) => pl(`M${x} ${y} l${-2.2 * (k || 1)} ${2.4 * (k || 1)} M${x} ${y} v${2.8 * (k || 1)} M${x} ${y} l${2.2 * (k || 1)} ${2.4 * (k || 1)}`, 1.4);
+  const PTAK_COLORS = ['#7fd8e6', '#ffd54a', '#ff9ec0', '#a4e07f'];
+  const PTAKI = [
+    // długonogi z hakowatym dziobem
+    (c) => pf('M27 13 L27 46 L41 46.5 L41 39.5 L33 39 L33 10.5 Z', c) +
+      pl('M27 12.5 L19.5 12.5 L19.5 15.5', 2.4) + pl('M21.5 15 H27', 1.6) +
+      `<circle cx="29.6" cy="14" r="1.1" fill="${PK}"/>` +
+      pl('M30 10.8 L29.6 5 M27.4 4.8 H31.8', 1.6) + pl('M32.6 10.6 L35 6', 1.4) +
+      `<rect x="33.4" y="1" width="3.6" height="6.4" rx=".8" transform="rotate(30 35.2 4.2)" fill="${PK}"/>` +
+      pl('M41 41.5 L45 37.5 M41 43 H46.5 M41 44.6 L44.6 48', 2) +
+      pl('M30.5 46.5 L17 70 M37.5 46.5 L47 63.5', 1.8) +
+      pl('M17 70 L9 69.4 M17 70 L11.5 77 M17 70 L19.6 77 M47 63.5 L55 67.6 M47 63.5 L51.5 71.5 M47 63.5 L44 72.5', 1.5),
+    // prostokątny z dziobem w prawo i zębatką na plecach
+    (c) => pf('M14 15 L44 17 L43 62 L14.5 60 Z', c) +
+      pl('M25 15.6 L22 7', 1.4) + `<rect x="18.4" y="1.4" width="4" height="6.6" rx=".6" transform="rotate(-24 20.4 4.7)" fill="${PK}"/>` +
+      `<rect x="36" y="20.5" width="2" height="3" rx=".5" fill="none" ${pk(1.2)}/>` +
+      pl('M42 23 L52 25', 1.4) + pf('M48 24.2 L54 24.8 L53.6 26.6 L48 26 Z', PK, 1) +
+      pl('M14.3 29 l-1.8 1.2 l1.6 1.2 l-1.8 1.2 l1.6 1.2 l-1.8 1.2 l2 1.2', 1.3) +
+      pl('M12.5 32.8 H9.6 M9.6 31 V34.6', 1.5) +
+      pl('M14.6 51 l-2.6 1 l2.2 .9 l-2.6 1 l2.2 .9 l-2.4 1 l3.2 2', 1.3) +
+      pl('M27 36 L37.5 44 Q39.5 47 37 48.6 Q34.5 49.2 33.6 47.4 Q32 48.4 31 46.6 Q29.2 47.2 28.4 45.2 Q26.2 45.4 26.6 43 Q24.4 42.4 26 40', 1.4) +
+      pl('M23.5 61 V70 M32.5 61.5 V70.5', 1.6) +
+      pf('M23.5 69.6 L21.4 73 L26.6 73.4 Z', PK, 1) + pf('M32.5 70.2 L30.4 73.6 L35.6 74 Z', PK, 1),
+    // kurka w kropki z ogonem z kostek
+    (c) => {
+      let s = pf('M17.5 22 L21 16.8 L26 15.4 L29 13.4 L30.6 15.6 L28.6 18.6 Z', '#fff', 1.6) +
+        pf('M13.4 21.6 L20 19.6 L21 25.2 L14.2 25.4 Z', '#fff', 1.6) +
+        pf('M20 19 L29.4 17.6 L31 34 L21 34 Z', '#d9d9d9') +
+        `<rect x="22.6" y="21" width="3.4" height="3.4" fill="${PK}"/><rect x="23.3" y="21.6" width="1" height="1" fill="#fff"/>` +
+        pf('M14 33.6 L45 33 L44.6 63.6 L13.4 63 Z', c);
+      [[18.5, 38.5, 6], [32, 38.3, 6], [25.8, 46, 4.6], [18.6, 52.8, 5.6], [31.4, 53.4, 5.6]]
+        .forEach(([x, y, w]) => (s += `<rect x="${x}" y="${y}" width="${w}" height="${w * 0.9}" rx=".7" fill="${PK}"/>`));
+      const pips = [[[.5, .5]], [[.28, .3], [.72, .72]], [[.25, .25], [.5, .5], [.75, .75]],
+        [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]]];
+      pips.forEach((pp, k) => {
+        const x = 45, y = 34 + k * 6, w = 6.2 - k * 0.4, h = 5.2;
+        s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx=".5" fill="#fff" ${pk(1.3)}/>`;
+        pp.forEach(([u, v]) => (s += `<circle cx="${(x + u * w).toFixed(2)}" cy="${(y + v * h).toFixed(2)}" r=".6" fill="${PK}"/>`));
+      });
+      return s + `<rect x="19.6" y="63.4" width="3.4" height="6" fill="${PK}"/><rect x="27.4" y="63.4" width="3.4" height="6" fill="${PK}"/>`;
+    },
+    // wystraszony z rozłożonymi skrzydłami
+    (c) => pf('M18.5 31 Q11 22 6.5 24.5 Q3 26.5 5 28.6 Q2.6 31.4 5.6 33.4 Q7 41 18.5 46 Z', c, 1.6) +
+      pf('M41.5 31 Q50 25 54.4 27.4 Q57.4 29.4 55.4 31.6 Q57 35.6 53 37.6 Q47.4 42 41.5 43.4 Z', c, 1.6) +
+      pf('M18.5 10 L42 10.6 L41.5 56 L18.5 56 Z', c) +
+      `<rect x="23" y="18" width="4.6" height="4" rx=".6" fill="${PK}"/><rect x="33.4" y="18" width="4.6" height="4" rx=".6" fill="${PK}"/>` +
+      pl('M21.6 15.4 L22.4 17.6 M38.6 15.2 L40 16.6 M23 25.2 Q25 26.6 27.6 25.6 M33.6 25.6 Q36 26.8 38.2 25.6', 1.3) +
+      pf('M24.4 34.6 Q27 29.6 32.4 29.8 Q36.6 30.4 36.4 34.4 Q35.4 37.6 32.6 36.2 Q30.6 39.4 27.6 38.4 Q25 37.6 24.4 34.6 Z', '#fff', 1.6) +
+      pl('M27.4 32 L28 35.8 M30.4 31 V34.6 M33 32 L32.6 35.4 M28.2 35.8 H32.4', 1) +
+      pl('M26.5 56 V61.5 M34 56 V61.5', 1.4) + toes(26.5, 61.5, .8) + toes(34, 61.5, .8),
+    // kwadratowa kaczka
+    (c) => pf('M28 27 L54.5 27 L55.4 49 L23 49 L22.4 37', c) +
+      pf('M14 20 L30 20 L30 38 L15 38 Z', c) +
+      `<path d="M18.4 24.4 q1.6 -1.4 3.4 -.6 q.6 2 -.6 3 q-2.2 .6 -2.8 -.6 z" fill="${PK}"/>` +
+      pf('M17.4 27.6 H5.6 V34.4 H17.4', '#fff') + pl('M5.6 31 H16.4', 2) +
+      pl('M36.2 32.4 V39.4 H50.6 L51.2 35', 2) +
+      pl('M31 49 V56 M44 49 V56', 2) + pf('M26.6 55.8 H35.4 V59 H26.6 Z', c, 1.8) + pf('M39.6 55.8 H48.4 V59 H39.6 Z', c, 1.8),
+    // w okularach, uśmiechnięty
+    (c) => pf('M18.5 34 Q8.6 35.6 5.4 42 Q4.4 45.4 7.4 45.2 Q7.6 48.4 10.6 47.4 Q12.6 50.2 18.5 48 Z', c, 1.6) +
+      pf('M41.5 34 Q51.4 35.6 54.6 42 Q55.6 45.4 52.6 45.2 Q52.4 48.4 49.4 47.4 Q47.4 50.2 41.5 48 Z', c, 1.6) +
+      pf('M18.5 10.4 L41.8 10 L41.5 56 L18.5 56 Z', c) +
+      pl('M18.8 22 H41.2 M18.8 28 H41.2 M18.8 34 H41.2 M18.8 40 H41.2 M18.8 46 H41.2 M18.8 52 H41.2', .5).replace(PK, '#5b8bd6') +
+      `<rect x="21.6" y="15.6" width="7" height="7" fill="${PK}"/><rect x="31.8" y="15.6" width="7" height="7" fill="${PK}"/>` +
+      `<rect x="23.6" y="17.6" width="3" height="3" fill="#fff"/><rect x="33.8" y="17.6" width="3" height="3" fill="#fff"/>` +
+      pl('M28.6 19 H31.8 M20 15.6 L21.6 17.6 M40.4 15.4 L38.8 17.4 M22 14.6 Q25 13.2 28.4 14.2 M32.2 14.2 Q35.6 13.2 38.6 14.4', 1.2) +
+      pf('M23.4 26.6 Q30 30.4 36.8 26.6 Q36.4 35.4 30 35.6 Q23.8 35.4 23.4 26.6 Z', '#fff', 1.6) +
+      pl('M28.6 30.6 V32.6 H31.4 V30.6', 1) +
+      pl('M26.6 56 V62 M34 56 V62', 1.4) + toes(26.6, 62, .8) + toes(34, 62, .8),
+    // szary z ogonem jak dym
+    (c) => `<rect x="41.6" y="56" width="5.4" height="6.4" fill="#6f6f6f"/><rect x="42.2" y="62" width="5.4" height="6.2" fill="#a5a5a5"/>` +
+      `<rect x="42.8" y="67.8" width="5.6" height="6.4" rx="1.2" fill="#d6d6d6"/>` +
+      pf('M16 40 L44.6 40 L44 53.4 L17 53.4 Q15.6 47 16 40 Z', c) +
+      `<rect x="41" y="39.4" width="6.6" height="17.4" rx="3" fill="${PK}"/>` +
+      pf('M29.6 47.6 Q34.4 46.4 41.2 46.2 Q36.8 50 34 49.4 Z', 'none', 1.4) +
+      pf('M27.4 3 L32.4 3.4 L29.6 12.4 L25 12 Z', '#fff', 1.6) + pl('M26.6 11.6 L30 5.4', 1.2) +
+      pf('M16 11.6 L30.4 11.4 Q28.6 25 29.2 40 L16 40 Z', '#6f6f6f') +
+      `<rect x="18.6" y="14.4" width="4.4" height="4.4" rx=".8" fill="${PK}"/>` +
+      pf('M16 15.6 H9.6 V21 H16 M9.6 18.2 H15.6', '#fff', 1.6) +
+      pl('M24.6 53.6 V58.6 M30 53.6 V58.6', 1.4) + toes(24.6, 58.6, .8) + toes(30, 58.6, .8),
+    // z kreskowanymi skrzydłami
+    (c) => {
+      let s = pl('M21.6 35 L3 27.6 M39.6 31 L57 21.4', 1.4);
+      for (let k = 0; k < 7; k++) {
+        const t = k / 6;
+        const x1 = 3 + 17 * t, y1 = 27.6 + 7.4 * t;
+        s += pl(`M${x1.toFixed(1)} ${y1.toFixed(1)} l${(1.6 - t).toFixed(1)} ${(13 - 8 * t).toFixed(1)}`, k < 2 ? 2 : 1.3);
+        const x2 = 57 - 16.6 * t, y2 = 21.4 + 9.6 * t;
+        s += pl(`M${x2.toFixed(1)} ${y2.toFixed(1)} l${(-1 + t).toFixed(1)} ${(13 - 7 * t).toFixed(1)}`, 1.3);
+      }
+      return s + pf('M21.6 30.4 L39.6 28.6 L41.4 48 L23.4 49.4 Z', c) +
+        `<rect x="25.4" y="33.4" width="2.6" height="2.6" fill="none" ${pk(1.1)}/><rect x="34.4" y="32.6" width="2.6" height="2.6" fill="none" ${pk(1.1)}/>` +
+        pf('M26.4 39.4 L35.4 38.8 L35.6 42 L26.6 42.6 Z', '#fff', 1.4) +
+        pl('M29.4 49 V55 M37.2 48.4 V53.6', 1.4) + toes(29.4, 55, .7) + toes(37.2, 53.6, .7);
+    },
+    // w opasce, na długich nogach
+    (c) => pf('M24 26 L42 26 L42 52 L24 52 Z', c) +
+      pl('M31 36 V41 H39 V36.4', 1.8) +
+      pf('M10 18.6 L29.6 18 L30 36 L10.4 36 Z', c) +
+      pf('M10.2 23 H29.8 V28.6 H10.3 Z', '#bdbdbd', 1.8) +
+      `<circle cx="18" cy="25.8" r="1.2" fill="${PK}"/>` +
+      pl('M10.2 26.6 Q6 26.8 6 25.4 Q6 24 10.2 24.2', 1.6) +
+      pl('M28.6 52 V66 M37.2 52 V66', 2) +
+      pf('M28.6 65 L24.6 70.6 L27.8 69 L28.6 71 L29.6 69 L32.6 70.6 Z', PK, 1) +
+      pf('M37.2 65 L33.2 70.6 L36.4 69 L37.2 71 L38.2 69 L41.2 70.6 Z', PK, 1),
+  ];
+  const ptakFaces = [];
+  PTAKI.forEach((draw) => PTAK_COLORS.forEach((c) => ptakFaces.push(() => wrap(draw(c)))));
+
   const list = [
     classic,
     emojiSet('fruits', 'Owoce i warzywa',
@@ -660,6 +774,7 @@ const TileSets = (() => {
     facesSet('minecraft', 'Minecraft (piksele)', pixelFaces, [0, 19, 23]),
     facesSet('cats', 'Kotki', catFaces, [0, 9, 26]),
     facesSet('mountains', 'Góry i wspinaczka', mountainFaces, [0, 19, 12]),
+    facesSet('ptakostki', 'Ptakostki', ptakFaces, [0, 13, 22]),
   ];
 
   return {
