@@ -806,13 +806,28 @@ const TileSets = (() => {
       pf('M27.6 42.4 L32.4 42.4 L30 46.4 Z', c, 1.4) +
       pl('M49 40 V70 M49 40 Q49 35.4 53 36.4', 1.8) + pl('M44 46 L49 47', 1.6) +
       pl('M24 62 V67 M34 62 V67', 1.6) + toes(24, 67, .9) + toes(34, 67, .9),
-    // pelikan z rybą w dziobie
-    (c) => pf('M26 30 L52 30 L52 56 L26 56 Z', c) +
-      pl('M34 38 V44 H48 L48.6 40', 1.8) +
-      pf('M14 16 L30 16 L30 31 L14 31 Z', c) + `<circle cx="23.6" cy="21" r="1.4" fill="${PK}"/>` +
-      `<path d="M7.6 20 L4 13.6 L11 15 Z" fill="#2f8fe0" stroke="#145a9c" stroke-width="1"/>` +
-      pf('M14 19.6 L2.6 19.6 Q2 30 8 33 Q12 34.6 14.4 30', c, 1.8) +
-      pl('M34 56 V63 M45 56 V63', 1.8) + pf('M29.6 62.8 H37.6 V66 H29.6 Z', c, 1.6) + pf('M40.6 62.8 H48.6 V66 H40.6 Z', c, 1.6),
+    // pelikan: długi dziób z workiem jak wiaderko, w środku fala i ryba
+    (c) => pf('M28 34 L48 34 L48 63 L28 63 Z', c) +
+      pl('M33 42 V50 H44 L44.6 46', 1.8) +
+      pf('M30 28 L30 34.4 L37 34.4 L37 28 Z', c, 1.8) +
+      pf('M26 14 L40 14 L40 28.6 L26 28.6 Z', c) +
+      pl('M33 14 L35.4 8.4 L38.6 9.6', 1.5) +
+      `<circle cx="33.4" cy="19" r="1.5" fill="${PK}"/>` +
+      pf('M26.4 19.4 L3.6 21 L3.8 23.8 L26.4 23.4 Z', c, 1.6) +
+      pf('M5 23.8 L25.6 23.4 L25 34 Q24.4 38.6 19.6 38.6 L10 38.6 Q5.4 38.6 5.2 34 Z', '#fff', 1.6) +
+      pl('M6.6 29 q2.3 -1.6 4.6 0 q2.3 1.6 4.6 0 q2.3 -1.6 4.6 0 q2 1.4 3.6 0.2', 1.1).replace(PK, '#2f8fe0') +
+      `<path d="M10 33.4 q4.4 -3 8.6 0 q-4.2 3 -8.6 0 Z M18.4 33.4 L21.4 31.2 L21.4 35.6 Z" fill="#2f8fe0" stroke="#145a9c" stroke-width=".8"/>` +
+      pl('M33 63 V69 M43 63 V69', 1.8) + pf('M28.6 68.8 H36.6 V72 H28.6 Z', c, 1.6) + pf('M38.6 68.8 H46.6 V72 H38.6 Z', c, 1.6),
+    // pelikan łapiący rybę: dziób szeroko otwarty do góry, ryba spada
+    (c) => `<path d="M17 4.6 q4 -3 8 0 q-4 3 -8 0 Z M24.8 4.6 L28 2.4 L28 6.8 Z" fill="#2f8fe0" stroke="#145a9c" stroke-width=".8"/>` +
+      pl('M19.6 9 v1.6 M22.6 8.4 v1.6', 1.1).replace(PK, '#2f8fe0') +
+      pf('M24 30 L8 12.4 L11 11.4 L26.6 27.4 Z', c, 1.6) +
+      pf('M26 30.4 L33 11.6 L36 12.6 L30.4 30.6 Z', c, 1.6) +
+      pf('M20 28 L36 28 L36 42 L20 42 Z', c) +
+      `<circle cx="31" cy="33" r="1.5" fill="${PK}"/>` +
+      pf('M24 42 L24 46 L18 46 L18 66 L50 66 L50 46 L30 46 L30 42 Z', c) +
+      pl('M26 53 V59 H42 L42.6 55', 1.8) +
+      pl('M27 66 V72 M41 66 V72', 1.8) + pf('M22.6 71.8 H30.6 V75 H22.6 Z', c, 1.6) + pf('M36.6 71.8 H44.6 V75 H36.6 Z', c, 1.6),
   ];
   const ptakFaces = [];
   PTAKI.forEach((draw) => PTAK_COLORS.forEach((c) => ptakFaces.push(() => wrap(draw(c)))));
