@@ -62,7 +62,8 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 ## Zestawy obrazków (`js/tilesets.js`)
 - Nowy zestaw: dopisz do `list` przez `emojiSet(id, name, 'emoji oddzielone spacjami')` albo `facesSet(id, name, [funkcje → SVG], preview)`. Rysunki SVG w `viewBox 0 0 60 80`, dobrze czytelne w małym rozmiarze (obrys, wyraźne kolory).
 - Do tego kolory tła kafelka w `style.css`: `[data-set="<id>"]`. Każdy zestaw ma własne pastelowe tło.
-- Każdy zestaw ma co najmniej 36 różnych obrazków (przy trudności 5 każdy obrazek ma w miarę możliwości tylko jedną parę).
+- Każdy zestaw ma co najmniej 36 różnych obrazków (od trudności 3 każdy obrazek ma 2 pary, więc największy układ, Żółw, potrzebuje 38 rodzajów).
+- Opcjonalne `group(i)` w `facesSet` (np. ten sam ptak w różnych kolorach w Ptakostkach): `pickTypes` w `game.js` bierze wtedy najpierw po jednym obrazku z każdej grupy.
 
 ## PWA i ikony
 - Udostępnianie: w zainstalowanej aplikacji nie widać paska adresu, więc przycisk „📤 Udostępnij grę” (`[data-share]` → `shareGame()` w `game.js`) jest w menu i w pomocy (`.share-box` w `index.html`). Sam przycisk, bez napisu z adresem (decyzja właściciela repozytorium – adres można skopiować w oknie udostępniania). Udostępniany jest zawsze stały `SHARE_URL` (adres na GitHub Pages), nie `location.href`, bo podgląd działa pod innym adresem. Najpierw `navigator.share` (telefon), potem `navigator.clipboard` (komputer), a na końcu komunikat z adresem.
@@ -72,7 +73,7 @@ Publikacja: `.github/workflows/pages.yml` (push do `main`) kopiuje `index.html s
 
 ## Testowanie
 - Układy: `node tools/check-layouts.mjs [id …]` pokazuje błędy (nieparzysta liczba, nachodzenie, kafelki w powietrzu) i miary ciasności. Kod wyjścia 1 oznacza błąd.
-- Przeglądarka: `python3 -m http.server 8765` w katalogu repo (w tle), Playwright jest preinstalowany (`require('playwright')`). Uchwyt do testów: `window.__mahjong = { state, settings, newGame, clickTile, clickSlot, findPair, isFree }`.
+- Przeglądarka: `python3 -m http.server 8765` w katalogu repo (w tle), Playwright jest preinstalowany (`require('playwright')`). Uchwyt do testów: `window.__mahjong = { state, settings, newGame, clickTile, clickSlot, findPair, isFree, solveFrom, autoPair }`.
   Przykład: `m.settings.device = 'phone'; m.settings.layout = 'castle'; m.newGame(1);`, potem zrzut ekranu. Gwarancję rozwiązania sprawdzisz przez `m.state.solution !== null` w wielu rozdaniach.
 - Telefon: viewport 390×780 (lub `devices['Pixel 7']`). Komputer: np. 1100×760 i `settings.device = 'desktop'`.
 - Service worker rejestruje się tylko przez HTTPS. Do testów offline podmień warunek w kopii `js/pwa.js` i zbuduj `sw.js` przez `tools/build-sw.mjs`.
