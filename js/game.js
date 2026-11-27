@@ -234,7 +234,7 @@
   const onBoard = (id) => S.tiles[id].loc === 'board';
   const isFree = (t) => t.loc === 'board' && freeWith(t, onBoard);
   // zakryty kafelek widać tylko wtedy, gdy jest właśnie odwrócony (zaznaczony)
-  const isRevealed = (t) => !t.faceDown || t.loc !== 'board' || S.selected === t.id;
+  const isRevealed = (t) => !t.faceDown || t.loc !== 'board' || S.selected === t.id || (S.auto || []).includes(t.id);
 
   // Buduje kolejność zdejmowania par, która gwarantuje rozwiązanie
   // (zdejmujemy pary aktualnie wolnych kafelków aż do opróżnienia).
@@ -530,9 +530,9 @@
   // ---------- kafelek ×3: automatyczne zbieranie par ----------
   // Para do zebrania: najpierw z zaplanowanego rozwiązania (zdjęcie jego pary
   // wcześniej nie psuje reszty rozwiązania), potem dowolna dostępna.
-  // Kafelki rewersem do góry na stosie są pomijane.
+  // Wolne kafelki rewersem do góry też się liczą – odwracają się na czas zbierania.
   function autoPair() {
-    const ok = (t) => t.loc === 'tray' || (isFree(t) && !t.faceDown);
+    const ok = (t) => t.loc === 'tray' || isFree(t);
     if (S.solution) {
       for (const [i, j] of S.solution) {
         const a = S.tiles[i];
