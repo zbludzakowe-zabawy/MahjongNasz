@@ -124,12 +124,15 @@ const TileSets = (() => {
   }
 
   // Zestaw złożony z funkcji rysujących; każdy obrazek liczony raz.
-  function facesSet(id, name, faces, preview) {
+  // group(i) – opcjonalnie: numer kształtu obrazka (np. ten sam ptak w różnych kolorach);
+  // gra wybiera wtedy najpierw różne kształty, a dopiero potem ich warianty.
+  function facesSet(id, name, faces, preview, group) {
     const cache = [];
     return {
       id,
       name,
       size: faces.length,
+      group,
       render(i) {
         if (!cache[i]) cache[i] = faces[i]();
         return cache[i];
@@ -838,7 +841,7 @@ const TileSets = (() => {
     facesSet('minecraft', 'Minecraft (piksele)', pixelFaces, [0, 19, 23]),
     facesSet('cats', 'Kotki', catFaces, [0, 9, 26]),
     facesSet('mountains', 'Góry i wspinaczka', mountainFaces, [0, 19, 12]),
-    facesSet('ptakostki', 'Ptakostki', ptakFaces, [0, 13, 22]),
+    facesSet('ptakostki', 'Ptakostki', ptakFaces, [0, 13, 22], (i) => Math.floor(i / PTAK_COLORS.length)),
   ];
 
   return {
